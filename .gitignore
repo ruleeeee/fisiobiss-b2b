@@ -1,0 +1,17 @@
+# Dependencias
+node_modules/
+
+# Compilación de Next.js
+.next/
+out/
+
+# Archivos de entorno (¡Tus claves de Firebase!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Archivos del sistema operativo y logs
+*.log
+.DS_Store
