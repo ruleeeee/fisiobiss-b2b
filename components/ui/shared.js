@@ -3,12 +3,29 @@ import { C } from "../../lib/constants";
 export const s = {
   card: {
     backgroundColor: C.card,
-    borderRadius: "12px",\n    padding: "20px",\n    border: `1px solid ${C.cardB}`,\n    boxShadow: "0 4px 12px rgba(0,0,0,0.5)"
+    borderRadius: "12px",
+    padding: "20px",
+    border: `1px solid ${C.cardB}`,
+    boxShadow: "0 4px 12px rgba(0,0,0,0.5)"
   },
   input: {
-    width: "100%",\n    backgroundColor: C.inputBg,\n    border: `1px solid ${C.inputB}`,\n    color: C.text,\n    padding: "10px 14px",\n    borderRadius: "6px",\n    fontSize: "14px",\n    outline: "none"
+    width: "100%",
+    backgroundColor: C.inputBg,
+    border: `1px solid ${C.inputB}`,
+    color: C.text,
+    padding: "10px 14px",
+    borderRadius: "6px",
+    fontSize: "14px",
+    outline: "none"
   },
   btn: {
-    backgroundColor: C.accent,\n    color: C.text,\n    border: "none",\n    padding: "10px 20px",\n    borderRadius: "6px",\n    cursor: "pointer",\n    fontWeight: "600",\n    transition: "opacity 0.2s"
+    backgroundColor: C.accent,
+    color: C.text,
+    border: "none",
+    padding: "10px 20px",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontWeight: "600",
+    transition: "opacity 0.2s"
   }
 };
