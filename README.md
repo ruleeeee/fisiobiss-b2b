@@ -1,63 +1,56 @@
 # 🌿 FISIOBISS — Canal Mayorista B2B
 
-Sistema de gestión de ventas B2B con Firebase Firestore en tiempo real.
+Sistema de gestión B2B con **Google Sheets como base de datos**.
 
 ## Stack
 
 | Capa | Tecnología |
 |------|-----------|
 | Frontend | **Next.js 14** + React 18 |
-| Base de datos | **Firebase Firestore** (tiempo real) |
+| Base de datos | **Google Sheets** (vía Service Account) |
+| API | Next.js API Routes (servidor) |
 | Gráficos | Recharts |
-| Estilos | CSS-in-JS (inline styles, paleta personalizada) |
-
-> No se requiere backend propio — Firebase es el backend.
 
 ---
 
 ## Instalación
 
 ```bash
-# 1. Instalar dependencias
 npm install
-
-# 2. Configurar Firebase
-cp .env.local.example .env.local
-# Edita .env.local con tus credenciales de Firebase
-
-# 3. Iniciar en desarrollo
+cp .env.local.example .env.local   # Configura tus credenciales
 npm run dev
 ```
 
-## Configuración de Firebase
+## Configuración de Google Sheets (una sola vez)
 
-### Paso 1 — Crear proyecto
-1. Ve a [Firebase Console](https://console.firebase.google.com)
-2. **Crear proyecto** → Nombre: `fisiobiss-b2b`
-3. **Agregar app web** → Copia las credenciales a `.env.local`
+### Paso 1 — Crear Service Account en Google Cloud
+1. Ve a [Google Cloud Console](https://console.cloud.google.com)
+2. Crea un proyecto (o usa uno existente)
+3. **APIs & Services → Biblioteca → Busca "Google Sheets API" → Activar**
+4. **IAM & Admin → Service Accounts → Crear Service Account**
+5. Nombre: `fisiobiss-sheets` → Crear → Continuar → Listo
+6. Clic en la service account creada → **Claves → Agregar clave → JSON**
+7. Se descarga un archivo JSON con las credenciales
 
-### Paso 2 — Firestore
-1. En el menú izquierdo → **Firestore Database**
-2. **Crear base de datos** → Modo producción
-3. Región: `us-central1` o `southamerica-east1`
+### Paso 2 — Configurar el Google Sheet
+1. Crea un **Google Sheet nuevo** en blanco
+2. Copia el **ID del Sheet** de la URL:  
+   `docs.google.com/spreadsheets/d/`**`ESTE_ES_EL_ID`**`/edit`
+3. Abre el Sheet → **Compartir** → pega el email de la service account → **Editor**
 
-### Paso 3 — Reglas de seguridad
-En Firestore → Reglas, pega esto (para desarrollo):
+### Paso 3 — Configurar `.env.local`
+```env
+GOOGLE_SHEET_ID=tu_sheet_id_aqui
+GOOGLE_SERVICE_ACCOUNT_EMAIL=nombre@proyecto.iam.gserviceaccount.com
+GOOGLE_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----\n"
 ```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
-    }
-  }
-}
-```
-> ⚠️ Para producción, implementa autenticación Firebase Auth.
+> La clave privada viene del JSON descargado. Reemplaza los saltos de línea reales por `\n`.
 
 ### Paso 4 — Cargar datos históricos
-Al iniciar la app, ve a la pestaña **⚙ Config** → **Cargar datos históricos**.
-Esto carga los 259 pedidos históricos (Nov 2025 → May 2026) a Firestore.
+```
+npm run dev → Parámetros → Cargar datos históricos
+```
+Esto crea automáticamente las hojas **BD_VENTAS** y **CONFIG** en el Sheet.
 
 ---
 
@@ -66,48 +59,51 @@ Esto carga los 259 pedidos históricos (Nov 2025 → May 2026) a Firestore.
 ```
 fisiobiss-b2b/
 ├── app/
-│   ├── layout.jsx          ← Layout raíz Next.js
-│   ├── page.jsx            ← Página principal
-│   └── globals.css         ← Estilos globales
+│   ├── api/
+│   │   ├── orders/
+│   │   │   ├── route.js          ← GET todos / POST nuevo
+│   │   │   ├── [id]/route.js     ← PATCH estado / PUT completo / DELETE
+│   │   │   └── seed/route.js     ← POST carga masiva histórica
+│   │   └── config/route.js       ← GET nextId
+│   ├── layout.jsx
+│   ├── page.jsx                  ← Página principal
+│   └── globals.css
 ├── components/
-│   ├── AppShell.jsx        ← Navegación + layout general
-│   ├── Dashboard.jsx       ← Dashboard con KPIs y gráficos
-│   ├── NuevoPedido.jsx     ← Formulario de ingreso de pedido
-│   ├── Pedidos.jsx         ← Base de datos de pedidos
-│   ├── Rentabilidad.jsx    ← P&L y análisis de rentabilidad
-│   ├── Setup.jsx           ← Pantalla de primer uso
-│   ├── ConnError.jsx       ← Pantalla de error de conexión
-│   ├── QuotationView.jsx   ← Vista de cotización imprimible
+│   ├── AppShell.jsx
+│   ├── Dashboard.jsx
+│   ├── NuevoPedido.jsx
+│   ├── Pedidos.jsx
+│   ├── Rentabilidad.jsx
+│   ├── Setup.jsx
+│   ├── QuotationView.jsx
 │   └── ui/
-│       ├── DateFilter.jsx  ← Filtro de fechas reutilizable
-│       ├── Splash.jsx      ← Pantalla de carga
-│       └── shared.js       ← Estilos y helpers compartidos
-├── lib/
-│   ├── firebase.js         ← Inicialización Firebase
-│   ├── firestore.js        ← Operaciones CRUD Firestore
-│   ├── constants.js        ← Productos, regiones, colores
-│   └── seedData.js         ← 259 pedidos históricos
-└── hooks/
-    └── useFirestore.js     ← Hook tiempo real con onSnapshot
+│       ├── ConnError.jsx
+│       ├── DateFilter.jsx
+│       ├── Splash.jsx
+│       └── shared.js
+├── hooks/
+│   └── usefirestore.js           ← Hook useOrders (polling 30s)
+└── lib/
+    ├── googleSheets.js           ← Capa de acceso a Sheets (solo servidor)
+    ├── db.js                     ← Funciones cliente → API Routes
+    ├── constants.js              ← Productos, colores, helpers
+    └── seeddata.js               ← 259 pedidos históricos
 ```
 
-## Colección Firestore
+## Flujo de datos
 
 ```
-orders/{PED-XXX}
-  id, fecha, vendedor, cliente, telefono, email,
-  direccion, region, estado, medioPago,
-  subtotal, costoEnvio, totalPagar, totalUnidades, cogs,
-  items: [...], notas, timestamp, createdAt
-
-config/app
-  nextId: 260
+Componente cliente
+      ↓ import { addOrder } from lib/db.js
+lib/db.js → fetch("/api/orders", POST)
+      ↓
+app/api/orders/route.js  (servidor Next.js)
+      ↓ import { addOrder } from lib/googleSheets.js
+lib/googleSheets.js → Google Sheets API
+      ↓
+Google Sheet (BD_VENTAS)
 ```
 
-## Despliegue en producción
-
-```bash
-npm run build
-npm start
-# O despliega en Vercel: vercel --prod
-```
+## Actualización en tiempo real
+La app sincroniza automáticamente cada **30 segundos** usando polling.  
+Botón **⟳** en la barra de navegación fuerza sincronización manual.

@@ -6,7 +6,7 @@ const inpStyle={background:"#0A1A0C",border:"1px solid #1A3520",color:"#90CBF9",
 const labelSt={fontSize:10,color:"#5A8A66",fontWeight:700,letterSpacing:1,marginBottom:4,display:"block"};
 const card={background:"#0D1F12",border:"1px solid #1A3520",borderRadius:12,padding:"18px 20px",marginBottom:14};
 
-export default function NuevoPedido({ nextId, addOrderFirebase, notify, setView }) {
+export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
   const prods = PRODUCTS.filter(p=>p.active);
   const emptyItems = ()=>prods.map(p=>({...p,qty:0,regalo:0}));
 
@@ -41,7 +41,7 @@ export default function NuevoPedido({ nextId, addOrderFirebase, notify, setView 
     const order={...f, id:orderId, subtotal, costoEnvio:envio, totalPagar:total, totalUnidades:totalUds, cogs };
     
     try {
-      await addOrderFirebase(order);
+      await addOrder(order);
       notify(`Pedido ${orderId} guardado ✓ en Firebase`);
       setF({fecha:today(),vendedor:"Vicente",cliente:"",telefono:"",email:"",direccion:"",region:"Metropolitana (RM)",items:emptyItems(),estado:"Pendiente",medioPago:"Transferencia",notas:""});
       setSearch("");

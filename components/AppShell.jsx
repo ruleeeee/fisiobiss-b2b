@@ -2,7 +2,7 @@
 "use client";
 import React from "react";
 
-export default function AppShell({ children, view, setView, ordersCount }) {
+export default function AppShell({ children, view, setView, ordersCount, syncing, lastSync, onRefresh }) {
   const TABS = [
     {id:"dashboard",icon:"◈",label:"Dashboard"},
     {id:"nuevo",icon:"+",label:"Nuevo Pedido"},
@@ -33,8 +33,21 @@ export default function AppShell({ children, view, setView, ordersCount }) {
             <span style={{fontSize:14}}>{t.icon}</span>{t.label}
           </button>
         ))}
-        <div style={{marginLeft:"auto",fontSize:11,color:"#3A6A46"}}>
-          {ordersCount || 0} pedidos · {new Date().toLocaleDateString("es-CL",{day:"numeric",month:"short",year:"numeric"})}
+        <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:10,fontSize:11}}>
+          {syncing && <span style={{color:"#F0B429",animation:"pulse 1s infinite"}}>⟳ Sincronizando...</span>}
+          {!syncing && lastSync && (
+            <span style={{color:"#3A6A46"}}>
+              ✓ {lastSync.toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"})}
+            </span>
+          )}
+          {onRefresh && (
+            <button onClick={onRefresh} disabled={syncing}
+              style={{background:"rgba(52,183,136,.1)",border:"1px solid #1A3520",
+                color:"#52B788",padding:"4px 10px",borderRadius:6,cursor:"pointer",fontSize:11}}>
+              ⟳
+            </button>
+          )}
+          <span style={{color:"#2A5A36"}}>{ordersCount || 0} pedidos</span>
         </div>
       </nav>
 

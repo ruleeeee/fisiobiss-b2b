@@ -1,4 +1,5 @@
 // components/Setup.jsx
+import { seedOrders } from '../lib/db';
 import { useState } from "react";
 import { $, P, REGIONS, VENDORS, PRODUCTS as INITIAL_PRODUCTS } from "../lib/constants";
 

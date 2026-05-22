@@ -7,7 +7,7 @@ const inpStyle={background:"#0A1A0C",border:"1px solid #1A3520",color:"#90CBF9",
 const card={background:"#0D1F12",border:"1px solid #1A3520",borderRadius:12,padding:"18px 20px",marginBottom:14};
 function Empty({msg}){return <div style={{padding:"32px 20px",textAlign:"center",color:"#3A6A46",fontSize:13}}>📭 {msg}</div>}
 
-export default function Pedidos({ orders, updateStatusFirebase, notify }) {
+export default function Pedidos({ orders, updateStatus, notify }) {
   const [search, setSearch]   = useState("");
   const [fEst,   setFEst]     = useState("Todos");
   const [fMes,   setFMes]     = useState("");
@@ -33,7 +33,7 @@ export default function Pedidos({ orders, updateStatusFirebase, notify }) {
 
   const updEst = async (id, est) => {
     try {
-      await updateStatusFirebase(id, est);
+      await updateStatus(id, est);
       if(detail?.id===id) setDetail(d=>({...d,estado:est}));
       notify(`Estado → ${est}`);
     } catch(err) {

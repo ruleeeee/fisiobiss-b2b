@@ -1,30 +1,14 @@
 // components/Dashboard.jsx
-import { useEffect, useState, useMemo } from "react";
-import { subscribeToOrders } from "../lib/firestore";
+import { useState, useMemo } from "react";
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
          XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { $, N, P, PIE_COLORS } from "../lib/constants";
-import Pedidos from "./Pedidos";
-import NuevoPedido from "./NuevoPedido";
 
 const selStyle = { background: "#0D1F12", border: "1px solid #1A3520", color: "#E8F5EE", padding: "8px 12px", borderRadius: 8, fontSize: 13, cursor: "pointer" };
 
 function Empty({ msg }) { return <div style={{ padding: "32px 20px", textAlign: "center", color: "#3A6A46", fontSize: 13 }}>📭 {msg}</div>; }
 
-export default function Dashboard({ view, setView, notify }) {
-  const [orders, setOrders] = useState([]);
-  const [nextId, setNextId] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // 1. Lógica de conexión a Firebase
-  useEffect(() => {
-    const unsubscribe = subscribeToOrders((data, id) => {
-      setOrders(data);
-      setNextId(id);
-      setIsLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
+export default function Dashboard({ orders = [], syncing = false }) {
 
   // 2. Lógica de estados y cálculos
   const allMonths = useMemo(() => [...new Set(orders.map(o => o.fecha?.slice(0, 7)).filter(Boolean))].sort().reverse(), [orders]);
@@ -102,9 +86,6 @@ export default function Dashboard({ view, setView, notify }) {
   ) : null;
 
   // 3. Renderizado
-  if (isLoading) return <div style={{ padding: 40, textAlign: "center", color: "#5A8A66" }}>Cargando datos...</div>;
-  if (view === "nuevo") return <NuevoPedido nextId={nextId} notify={notify} setView={setView} />;
-  if (view === "pedidos") return <Pedidos orders={orders} notify={notify} />;
 
   return (
     <div>

@@ -1,65 +1,119 @@
 // app/page.jsx
 "use client";
+import { C } from "../lib/constants";
+import { useState } from "react";
+import { useOrders } from "../hooks/usefirestore";
+import { addOrder, updateOrderStatus } from "../lib/db";
 
-import { useState, useEffect } from "react";
-import { useFirestore } from "../hooks/useFirestore";
-import { addOrder, updateOrderStatus } from "../lib/firestore"; // Importamos las ops de firebase
-
-// Componentes modulares
-import AppShell from "../components/AppShell";
-import Dashboard from "../components/Dashboard";
-import NuevoPedido from "../components/NuevoPedido";
-import Pedidos from "../components/Pedidos";
-import Rentabilidad from "../components/Rentabilidad";
-import Setup from "../components/Setup";
-import ConnError from "../components/ui/ConnError";
+// Componentes
+import AppShell    from "../components/appshell";
+import Dashboard   from "../components/dashboard";
+import NuevoPedido from "../components/nuevopedido";
+import Pedidos     from "../components/pedidos";
+import Rentabilidad from "../components/rentabilidad";
+import Setup       from "../components/setup";
+import ConnError   from "../components/ui/connerror";
 
 export default function Home() {
   const [view, setView] = useState("dashboard");
   const [toast, setToast] = useState(null);
-  
-  // Hook de Firebase
-  const { orders, loading, error } = useFirestore();
 
-  if (error) return <ConnError error={error} />;
+  // ── Data hook (Google Sheets via API Routes) ──
+  const {
+    orders, nextId, loading, error,
+    syncing, lastSync,
+    refresh, updateLocalStatus, addLocalOrder,
+  } = useOrders();
 
-  // Pantalla de carga v3
-  if (loading || !orders) return (
-    <div style={{minHeight:"100vh",background:"#07100A",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:12}}>
-      <span style={{fontSize:40}}>🌿</span>
-      <span style={{color:"#52B788",fontFamily:"monospace",fontSize:13,letterSpacing:2}}>SINCRONIZANDO CON FIREBASE...</span>
+  // ── Handlers ─────────────────────────────────
+  const notify = (msg, type = "ok") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3200);
+  };
+
+  const handleAddOrder = async (order) => {
+    try {
+      addLocalOrder(order);                     // optimistic update
+      await addOrder(order);                    // persist to Sheets
+      notify(`✅ ${order.id} guardado en Google Sheets`);
+    } catch (err) {
+      notify("❌ Error al guardar: " + err.message, "err");
+      refresh();                                // revert on failure
+    }
+  };
+
+  const handleUpdateStatus = async (id, estado) => {
+    try {
+      updateLocalStatus(id, estado);            // optimistic update
+      await updateOrderStatus(id, estado);      // persist to Sheets
+      notify(`Estado actualizado → ${estado}`);
+    } catch (err) {
+      notify("❌ Error al actualizar estado", "err");
+      refresh();
+    }
+  };
+
+  // ── Pantallas de estado ───────────────────────
+  if (loading) return (
+    <div style={{ minHeight:"100vh", background:C.bg, display:"flex",
+      alignItems:"center", justifyContent:"center", flexDirection:"column", gap:12 }}>
+      <span style={{ fontSize:40 }}>🌿</span>
+      <span style={{ color:C.accent, fontFamily:"monospace", fontSize:13, letterSpacing:2 }}>
+        SINCRONIZANDO CON GOOGLE SHEETS...
+      </span>
+      <div style={{ width:200, height:2, background:C.card, borderRadius:2, overflow:"hidden" }}>
+        <div style={{ width:"40%", height:"100%", background:C.accent,
+          animation:"slide 1.2s ease-in-out infinite" }}/>
+      </div>
+      <style>{`@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}`}</style>
     </div>
   );
 
-  const notify = (msg, type="ok") => {
-    setToast({msg,type});
-    setTimeout(()=>setToast(null), 3200);
-  };
-
-  // Cálculo del siguiente ID basado en Firebase (emulando nextId local)
-  const maxNum = orders.reduce((max, o) => {
-    const n = parseInt((o.id || "").replace("PED-", "")) || 0;
-    return Math.max(max, n);
-  }, 0);
-  const nextIdValue = maxNum + 1;
+  if (error) return <ConnError error={error} onRetry={refresh}/>;
 
   return (
     <>
-      <AppShell view={view} setView={setView} ordersCount={orders.length}>
-        {view === "dashboard"    && <Dashboard orders={orders} />}
-        {view === "nuevo"        && <NuevoPedido orders={orders} nextId={nextIdValue} addOrderFirebase={addOrder} notify={notify} setView={setView}/>}
-        {view === "pedidos"      && <Pedidos orders={orders} updateStatusFirebase={updateOrderStatus} notify={notify} />}
-        {view === "rentabilidad" && <Rentabilidad orders={orders} />}
-        {view === "setup"        && <Setup />}
+      <AppShell
+        view={view}
+        setView={setView}
+        ordersCount={orders.length}
+        syncing={syncing}
+        lastSync={lastSync}
+        onRefresh={refresh}
+      >
+        {view === "dashboard"    && (
+          <Dashboard orders={orders} syncing={syncing}/>
+        )}
+        {view === "nuevo"        && (
+          <NuevoPedido
+            nextId={nextId}
+            addOrder={handleAddOrder}
+            notify={notify}
+            setView={setView}
+          />
+        )}
+        {view === "pedidos"      && (
+          <Pedidos
+            orders={orders}
+            updateStatus={handleUpdateStatus}
+            notify={notify}
+          />
+        )}
+        {view === "rentabilidad" && <Rentabilidad orders={orders}/>}
+        {view === "setup"        && <Setup onSeed={refresh} notify={notify}/>}
       </AppShell>
 
-      {/* Tostada de notificaciones flotante de la v3 */}
+      {/* Toast de notificaciones */}
       {toast && (
-        <div style={{position:"fixed",bottom:24,right:24,background:toast.type==="ok"?"#1A5E2A":"#7B1D1D",
-          color:"#fff",padding:"13px 20px",borderRadius:10,zIndex:9999,fontSize:13,fontWeight:600,
-          boxShadow:"0 4px 24px rgba(0,0,0,.5)",display:"flex",alignItems:"center",gap:8,
-          animation:"slideIn .2s ease"}}>
-          {toast.type==="ok"?"✅":"❌"} {toast.msg}
+        <div style={{
+          position:"fixed", bottom:24, right:24,
+          background: toast.type === "ok" ? "#1A5E2A" : "#7B1D1D",
+          color:"#fff", padding:"13px 20px", borderRadius:10,
+          zIndex:9999, fontSize:13, fontWeight:600,
+          boxShadow:"0 4px 24px rgba(0,0,0,.5)",
+          display:"flex", alignItems:"center", gap:8,
+        }}>
+          {toast.msg}
         </div>
       )}
     </>
