@@ -14,7 +14,6 @@ import Setup from "../components/Setup";
 import QuotationView from "../components/QuotationView";
 
 // UI Atómicos
-import Splash from "../components/ui/Splash";
 import ConnError from "../components/ui/ConnError";
 import DateFilter from "../components/ui/DateFilter";
 
@@ -30,7 +29,6 @@ export default function Home() {
   // Hook personalizado de tiempo real
   const { orders, loading, error } = useFirestore();
 
-  if (loading) return <Splash />;
   if (error) return <ConnError error={error} />;
 
   // Filtrar la data en caliente según los selectores de la UI
@@ -38,7 +36,7 @@ export default function Home() {
 
   return (
     <AppShell view={view} setView={setView}>
-      {/* Barra superior de filtrado global (visible en todas las vistas analíticas) */}
+      {/* Barra superior de filtrado global */}
       {(view === "dashboard" || view === "pedidos" || view === "rentabilidad") && (
         <DateFilter 
           dateFilter={dateFilter} setDateFilter={setDateFilter}
@@ -47,12 +45,20 @@ export default function Home() {
         />
       )}
 
-      {/* Ruteador de Vistas */}
-      {view === "dashboard" && <Dashboard orders={filteredOrders} />}
-      {view === "nuevo" && <NuevoPedido onOrderAdded={() => setView("pedidos")} />}
-      {view === "pedidos" && <Pedidos orders={filteredOrders} setQuotationOrder={setQuotationOrder} />}
-      {view === "rentabilidad" && <Rentabilidad orders={filteredOrders} />}
-      {view === "setup" && <Setup />}
+      {/* Ruteador de Vistas: Si está cargando, mostramos un texto sutil sin bloquear el menú */}
+      {loading ? (
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "40vh", color: "#A39A84", fontSize: "14px" }}>
+          ⏳ Sincronizando datos con la nube...
+        </div>
+      ) : (
+        <>
+          {view === "dashboard" && <Dashboard orders={filteredOrders} />}
+          {view === "nuevo" && <NuevoPedido onOrderAdded={() => setView("pedidos")} />}
+          {view === "pedidos" && <Pedidos orders={filteredOrders} setQuotationOrder={setQuotationOrder} />}
+          {view === "rentabilidad" && <Rentabilidad orders={filteredOrders} />}
+          {view === "setup" && <Setup />}
+        </>
+      )}
 
       {/* Modal flotante de Cotización (Imprimible) */}
       {quotationOrder && (
