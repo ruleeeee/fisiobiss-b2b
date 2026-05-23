@@ -19,6 +19,7 @@ export default function Pedidos({ orders, updateStatus, notify }) {
   const allMonths=[...new Set(orders.map(o=>o.fecha?.slice(0,7)).filter(Boolean))].sort().reverse();
   const allVendors=["Todos",...new Set(orders.map(o=>o.vendedor).filter(Boolean))];
 
+  // 1. Filtrado original
   const filtered = useMemo(()=>orders.filter(o=>{
     const s=search.toLowerCase();
     const mS=!s||o.id?.toLowerCase().includes(s)||o.cliente?.toLowerCase().includes(s)||o.region?.toLowerCase().includes(s);
@@ -28,8 +29,18 @@ export default function Pedidos({ orders, updateStatus, notify }) {
     return mS&&mE&&mM&&mV;
   }),[orders,search,fEst,fMes,fVend]);
 
-  const pages = Math.ceil(filtered.length/PER_PAGE);
-  const paged = filtered.slice((page-1)*PER_PAGE, page*PER_PAGE);
+  // 2. Ordenamiento inteligente (Del más nuevo al más antiguo según el número de ID)
+  const sortedOrders = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      const numA = parseInt(String(a.id).match(/\d+/)?.[0] || 0, 10);
+      const numB = parseInt(String(b.id).match(/\d+/)?.[0] || 0, 10);
+      return numB - numA; 
+    });
+  }, [filtered]);
+
+  // 3. Paginación aplicada a la lista ordenada
+  const pages = Math.ceil(sortedOrders.length/PER_PAGE);
+  const paged = sortedOrders.slice((page-1)*PER_PAGE, page*PER_PAGE);
 
   const updEst = async (id, est) => {
     try {
@@ -49,7 +60,7 @@ export default function Pedidos({ orders, updateStatus, notify }) {
     <div>
       <div style={{display:"flex",gap:12,marginBottom:18,alignItems:"center",flexWrap:"wrap"}}>
         <div style={{fontSize:22,fontWeight:800,flex:1}}>Pedidos</div>
-        <span style={{fontSize:12,color:"#3A6A46"}}>{filtered.length} resultados</span>
+        <span style={{fontSize:12,color:"#3A6A46"}}>{sortedOrders.length} resultados</span>
       </div>
 
       <div style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap"}}>
@@ -120,6 +131,17 @@ export default function Pedidos({ orders, updateStatus, notify }) {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Recuadro Inferior de Resumen */}
+      <div style={{
+        background: "#0D1F12", border: "1px solid #1A3520", padding: "14px 20px", 
+        borderRadius: "8px", display: "flex", justifyContent: "space-between", 
+        alignItems: "center", marginTop: "16px", color: "#7EC8A4", fontSize: "14px", fontWeight: 600
+      }}>
+         <div>Filtrados: <span style={{color: "#E8F5EE", fontWeight: 700}}>{sortedOrders.length} pedidos</span></div>
+         <div>Revenue: <span style={{color: "#52B788", fontWeight: 700}}>{$(sortedOrders.reduce((acc, o) => acc + (o.totalPagar || 0), 0))}</span></div>
+         <div>Unidades: <span style={{color: "#E8F5EE", fontWeight: 700}}>{N(sortedOrders.reduce((acc, o) => acc + (o.totalUnidades || 0), 0))}</span></div>
       </div>
     </div>
   );

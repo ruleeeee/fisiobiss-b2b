@@ -1,47 +1,111 @@
 // components/Rentabilidad.jsx
-import { useState } from "react";
-import { $, N, P } from "../lib/constants";
+import { useState, useMemo } from "react";
+import { $, N, P, PRODUCTS } from "../lib/constants"; 
 
 const selStyle={background:"#0D1F12",border:"1px solid #1A3520",color:"#E8F5EE",padding:"8px 12px",borderRadius:8,fontSize:13,cursor:"pointer"};
 const inpStyle={background:"#0A1A0C",border:"1px solid #1A3520",color:"#90CBF9",padding:"9px 12px",borderRadius:8,fontSize:13,width:"100%",boxSizing:"border-box"};
 const labelSt={fontSize:10,color:"#5A8A66",fontWeight:700,letterSpacing:1,marginBottom:4,display:"block"};
 const card={background:"#0D1F12",border:"1px solid #1A3520",borderRadius:12,padding:"18px 20px",marginBottom:14};
 
+const parseDate = (fechaRaw) => {
+  if (!fechaRaw) return { month: "", day: "" };
+  const str = String(fechaRaw).trim();
+  if (str.match(/^\d{4}-\d{2}-\d{2}/)) return { month: str.slice(0, 7), day: str.slice(8, 10) };
+  const parts = str.split(/[\/\-]/);
+  if (parts.length === 3) {
+    const d = parts[0].padStart(2, '0');
+    const m = parts[1].padStart(2, '0');
+    let y = parts[2];
+    if (y.length === 2) y = "20" + y;
+    return { month: `${y}-${m}`, day: d };
+  }
+  return { month: str.slice(0, 7), day: "01" };
+};
+
 export default function Rentabilidad({ orders: allOrders }){
-  const allMonths=[...new Set(allOrders.map(o=>o.fecha?.slice(0,7)).filter(Boolean))].sort().reverse();
-  const [mes, setMes]=useState(allMonths[0]||"");
-  const [publi, setPubli]=useState(0);
-  const [otros, setOtros]=useState(0);
+  
+  const processedOrders = useMemo(() => {
+    return allOrders.map(o => {
+      const { month } = parseDate(o.fecha);
+      let calcCogs = 0;
+      let calcSubtotal = 0;
 
-  const orders=allOrders.filter(o=>!mes||o.fecha?.startsWith(mes));
-  const revB=orders.reduce((s,o)=>s+(o.totalPagar||0),0);
-  const revN=revB/1.19;
-  const cogs=orders.reduce((s,o)=>s+(o.cogs||0),0);
-  const envios=orders.reduce((s,o)=>s+(o.costoEnvio||0),0);
-  const gross=revN-cogs;
-  const netto=gross-envios-publi-otros;
-  const mG=revN?gross/revN:0;
-  const mN=revN?netto/revN:0;
-  const nPed=orders.length;
-  const roas=publi?revB/publi:0;
+      const newItems = (o.items || []).map(it => {
+        let searchName = it.name
+          .replace("Cap. ", "Cápsulas ")
+          .replace("Ext. ", "Extracto ")
+          .replace("Gom. ", "Gomitas ")
+          .replace("Pol. ", "Polvo ");
+        
+        if (searchName === "Cápsulas Desincha +") searchName = "Cápsula Desincha +";
 
-  // SKU table
-  const skuMap={};
-  orders.forEach(o=>(o.items||[]).forEach(it=>{
-    if(it.qty>0){
-      if(!skuMap[it.name])skuMap[it.name]={units:0,rev:0,cogs:0};
-      skuMap[it.name].units+=it.qty;
-      skuMap[it.name].rev+=it.qty*it.precio;
-      skuMap[it.name].cogs+=it.qty*it.costo;
+        const prodData = PRODUCTS.find(p => p.name === searchName || p.name === it.name) || {};
+        
+        const costoReal = prodData.costo || it.costo || 0;
+        const precioReal = prodData.precio || it.precio || 0;
+        const nombreOficial = prodData.name || it.name; 
+
+        calcCogs += (it.qty * costoReal);
+        calcSubtotal += (it.qty * precioReal);
+
+        return { ...it, name: nombreOficial, costoReal, precioReal };
+      });
+
+      const finalTotal = o.totalPagar > 0 ? o.totalPagar : (calcSubtotal + (o.costoEnvio || 0));
+
+      return {
+        ...o,
+        _month: month,
+        cogs: calcCogs,
+        totalPagar: finalTotal,
+        items: newItems
+      };
+    }).filter(o => o._month !== "");
+  }, [allOrders]);
+
+  const allMonths = useMemo(() => [...new Set(processedOrders.map(o => o._month))].sort().reverse(), [processedOrders]);
+  const defaultMonth = allMonths.length > 0 ? allMonths[0] : "";
+  const [mes, setMes] = useState(defaultMonth);
+  const [publi, setPubli] = useState(0);
+  const [otros, setOtros] = useState(0);
+
+  if (allMonths.length > 0 && mes !== "" && !allMonths.includes(mes)) {
+    setMes(allMonths[0]);
+  }
+
+  const orders = processedOrders.filter(o => !mes || o._month === mes);
+  
+  const revB = orders.reduce((s,o) => s + (o.totalPagar||0), 0);
+  const revN = revB / 1.19;
+  const cogs = orders.reduce((s,o) => s + (o.cogs||0), 0);
+  const envios = orders.reduce((s,o) => s + (o.costoEnvio||0), 0);
+  const gross = revN - cogs;
+  const netto = gross - envios - publi - otros;
+  const mG = revN ? gross / revN : 0;
+  const mN = revN ? netto / revN : 0;
+  const nPed = orders.length;
+  const roas = publi ? revB / publi : 0;
+
+  const skuMap = {};
+  orders.forEach(o => (o.items || []).forEach(it => {
+    if (it.qty > 0) {
+      if (!skuMap[it.name]) skuMap[it.name] = { units: 0, rev: 0, cogs: 0 };
+      skuMap[it.name].units += it.qty;
+      skuMap[it.name].rev += (it.qty * it.precioReal);
+      skuMap[it.name].cogs += (it.qty * it.costoReal);
     }
   }));
-  const skuRows=Object.entries(skuMap).map(([n,v])=>({
-    name:n,units:v.units,rev:v.rev,cogs:v.cogs,
-    profit:v.rev/1.19-v.cogs,
-    margin:(v.rev/1.19-v.cogs)/(v.rev/1.19),
-  })).sort((a,b)=>b.profit-a.profit);
 
-  const Row=({l,v,h})=>(
+  const skuRows = Object.entries(skuMap).map(([n,v]) => ({
+    name: n, 
+    units: v.units, 
+    rev: v.rev, 
+    cogs: v.cogs,
+    profit: (v.rev / 1.19) - v.cogs,
+    margin: v.rev ? ((v.rev / 1.19) - v.cogs) / (v.rev / 1.19) : 0,
+  })).sort((a,b) => b.profit - a.profit);
+
+  const Row = ({ l, v, h }) => (
     <div style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:"1px solid #0D1A0F",fontSize:13}}>
       <span style={{color:"#5A8A66"}}>{l}</span>
       <span style={{fontWeight:700,color:h?"#52B788":"#E8F5EE"}}>{v}</span>
@@ -53,8 +117,8 @@ export default function Rentabilidad({ orders: allOrders }){
       <div style={{display:"flex",gap:12,marginBottom:20,alignItems:"center"}}>
         <div style={{fontSize:22,fontWeight:800,flex:1}}>Rentabilidad</div>
         <select value={mes} onChange={e=>setMes(e.target.value)} style={selStyle}>
-          <option value="">Todos los períodos</option>
-          {allMonths.map(m=><option key={m}>{m}</option>)}
+          {allMonths.map(m=><option key={m} value={m}>{m}</option>)}
+          <option value="">Todos los períodos (Histórico)</option>
         </select>
       </div>
 

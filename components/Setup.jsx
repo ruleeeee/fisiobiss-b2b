@@ -1,5 +1,4 @@
 // components/Setup.jsx
-import { seedOrders } from '../lib/db';
 import { useState } from "react";
 import { $, P, REGIONS, VENDORS, PRODUCTS as INITIAL_PRODUCTS } from "../lib/constants";
 
@@ -8,12 +7,10 @@ const card = { background: "#0D1F12", border: "1px solid #1A3520", borderRadius:
 
 export default function Setup() {
   const [sub, setSub] = useState("productos");
-  
-  // Usamos useState para manejar los productos y evitar que los inputs pierdan el foco
   const [prods, setProds] = useState(INITIAL_PRODUCTS);
   const [newP, setNewP] = useState({ name: "", precio: "", costo: "" });
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Funciones para editar, activar/desactivar y agregar productos
   const updProd = (id, field, val) => {
     setProds(prev => prev.map(p => 
       p.id === id ? { ...p, [field]: field === "name" ? val : +val || 0 } : p
@@ -35,9 +32,33 @@ export default function Setup() {
     setNewP({ name: "", precio: "", costo: "" });
   };
 
+  // Función para manejar el guardado general de los precios
+  const handleSave = () => {
+    setIsSaving(true);
+    // Aquí puedes conectar en el futuro con un fetch() a tu API para actualizar la base de datos
+    setTimeout(() => {
+      alert("✅ Cambios guardados en la sesión actual.\n\nNota: Para que este cambio se mantenga tras refrescar la página, se debe conectar este botón a una ruta de backend (API).");
+      setIsSaving(false);
+    }, 800);
+  };
+
   return (
     <div>
-      <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 18 }}>Parámetros del Sistema</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+        <div style={{ fontSize: 22, fontWeight: 800 }}>Parámetros del Sistema</div>
+        
+        {/* Botón de Guardar Cambios en la cabecera */}
+        {sub === "productos" && (
+          <button onClick={handleSave} disabled={isSaving} style={{
+            background: isSaving ? "#4A7A56" : "#4A7A56", color: "#0A1A0C", border: "none",
+            borderRadius: 8, padding: "10px 18px", cursor: isSaving ? "wait" : "pointer", 
+            fontSize: 14, fontWeight: 800, transition: "0.2s"
+          }}>
+            {isSaving ? "Guardando..." : "Guardar Cambios"}
+          </button>
+        )}
+      </div>
+
       <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
         {[["productos", "📦 Productos & SKUs"], ["regiones", "🌎 Regiones"], ["vendedores", "👤 Vendedores"]].map(([id, lbl]) => (
           <button key={id} onClick={() => setSub(id)} style={{
