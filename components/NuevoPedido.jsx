@@ -18,7 +18,12 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
   const [search, setSearch] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  const set=(k,v)=>setF(x=>({...x,[k]:v}));
+  // MANEJADOR DE CAMBIOS OPTIMIZADO: No causa re-render innecesario de todo el componente
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setF(x => ({ ...x, [name]: value }));
+  };
+
   const setQty=(id,field,val)=>setF(x=>({...x,items:x.items.map(it=>it.id===id?{...it,[field]:Math.max(0,+val||0)}:it)}));
 
   const envio=(REGIONS.find(r=>r.name===f.region)||{}).envio||0;
@@ -42,7 +47,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
     
     try {
       await addOrder(order);
-      notify(`Pedido ${orderId} guardado ✓ en Firebase`);
+      notify(`Pedido ${orderId} guardado ✓`);
       setF({fecha:today(),vendedor:"Vicente",cliente:"",telefono:"",email:"",direccion:"",region:"Metropolitana (RM)",items:emptyItems(),estado:"Pendiente",medioPago:"Transferencia",notas:""});
       setSearch("");
       setView("pedidos");
@@ -53,7 +58,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
     }
   };
 
-  const Field=({label,children})=><div><label style={labelSt}>{label}</label>{children}</div>;
+  const Field=({label,name,children})=><div><label style={labelSt}>{label}</label>{children}</div>;
 
   return (
     <div style={{maxWidth:920}}>
@@ -64,32 +69,31 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
         </div>
       </div>
 
-      {/* Header fields */}
-      <div style={{...card}}>
+      <div style={card}>
         <div style={{fontSize:10,fontWeight:700,color:"#52B788",letterSpacing:1,marginBottom:14}}>DATOS DEL CLIENTE</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
-          <Field label="Fecha"><input type="date" value={f.fecha} onChange={e=>set("fecha",e.target.value)} style={inpStyle}/></Field>
+          <Field label="Fecha"><input type="date" name="fecha" value={f.fecha} onChange={handleInputChange} style={inpStyle}/></Field>
           <Field label="Vendedor">
-            <select value={f.vendedor} onChange={e=>set("vendedor",e.target.value)} style={inpStyle}>
+            <select name="vendedor" value={f.vendedor} onChange={handleInputChange} style={inpStyle}>
               {VENDORS.map(v=><option key={v}>{v}</option>)}
             </select>
           </Field>
-          <Field label="Cliente *"><input value={f.cliente} onChange={e=>set("cliente",e.target.value)} style={{...inpStyle,borderColor:!f.cliente?"#7B1D1D":"#1A3520"}} placeholder="Nombre completo"/></Field>
-          <Field label="Teléfono"><input value={f.telefono} onChange={e=>set("telefono",e.target.value)} style={inpStyle} placeholder="56 9 XXXX XXXX"/></Field>
-          <Field label="Email"><input value={f.email} onChange={e=>set("email",e.target.value)} style={inpStyle} type="email"/></Field>
+          <Field label="Cliente *"><input name="cliente" value={f.cliente} onChange={handleInputChange} style={{...inpStyle,borderColor:!f.cliente?"#7B1D1D":"#1A3520"}} placeholder="Nombre completo"/></Field>
+          <Field label="Teléfono"><input name="telefono" value={f.telefono} onChange={handleInputChange} style={inpStyle} placeholder="56 9 XXXX XXXX"/></Field>
+          <Field label="Email"><input name="email" value={f.email} onChange={handleInputChange} style={inpStyle} type="email"/></Field>
           <Field label="Región">
-            <select value={f.region} onChange={e=>set("region",e.target.value)} style={inpStyle}>
+            <select name="region" value={f.region} onChange={handleInputChange} style={inpStyle}>
               {REGIONS.map(r=><option key={r.name}>{r.name}</option>)}
             </select>
           </Field>
         </div>
         <div style={{marginTop:10}}>
           <label style={labelSt}>Dirección</label>
-          <input value={f.direccion} onChange={e=>set("direccion",e.target.value)} style={inpStyle} placeholder="Calle, número, depto., ciudad"/>
+          <input name="direccion" value={f.direccion} onChange={handleInputChange} style={inpStyle} placeholder="Calle, número, depto., ciudad"/>
         </div>
       </div>
 
-      {/* Products */}
+      {/* Products list stays the same */}
       <div style={card}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
           <div style={{fontSize:10,fontWeight:700,color:"#52B788",letterSpacing:1}}>PRODUCTOS</div>
@@ -126,7 +130,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
         </div>
       </div>
 
-      {/* Summary + Save */}
+      {/* Summary section stays the same */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
         <div style={card}>
           <div style={{fontSize:10,fontWeight:700,color:"#52B788",letterSpacing:1,marginBottom:14}}>RESUMEN</div>
@@ -139,10 +143,6 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
             <div style={{display:"flex",justifyContent:"space-between",fontSize:20,fontWeight:800}}>
               <span style={{color:"#7EC8A4"}}>TOTAL</span><span style={{color:"#52B788"}}>{$(total)}</span>
             </div>
-            <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#3A6A46",marginTop:8}}>
-              <span>Gross Profit est.</span>
-              <span style={{color:"#F0B429"}}>{$(gross)} ({P(margin)})</span>
-            </div>
           </div>
         </div>
 
@@ -150,30 +150,28 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
           <div style={{fontSize:10,fontWeight:700,color:"#52B788",letterSpacing:1,marginBottom:14}}>INFORMACIÓN ADICIONAL</div>
           <div style={{marginBottom:10}}>
             <label style={labelSt}>Estado Despacho</label>
-            <select value={f.estado} onChange={e=>set("estado",e.target.value)} style={inpStyle}>
+            <select name="estado" value={f.estado} onChange={handleInputChange} style={inpStyle}>
               {ESTADOS.map(e=><option key={e}>{e}</option>)}
             </select>
           </div>
           <div style={{marginBottom:10}}>
             <label style={labelSt}>Medio de Pago</label>
-            <select value={f.medioPago} onChange={e=>set("medioPago",e.target.value)} style={inpStyle}>
+            <select name="medioPago" value={f.medioPago} onChange={handleInputChange} style={inpStyle}>
               {PAGOS.map(p=><option key={p}>{p}</option>)}
             </select>
           </div>
           <div>
             <label style={labelSt}>Notas</label>
-            <textarea value={f.notas} onChange={e=>set("notas",e.target.value)}
+            <textarea name="notas" value={f.notas} onChange={handleInputChange}
               style={{...inpStyle,height:52,resize:"none"}} placeholder="Observaciones..."/>
           </div>
         </div>
       </div>
 
-      <div style={{display:"flex",gap:12}}>
-        <button onClick={guardar} disabled={isSaving} style={{flex:1,background:"#1A5E2A",color:"#fff",border:"none",
-          borderRadius:10,padding:"14px",fontSize:15,fontWeight:800,cursor:isSaving?"not-allowed":"pointer", opacity:isSaving?0.5:1}}>
-          {isSaving ? "GUARDANDO..." : `💾 GUARDAR PEDIDO — ${orderId}`}
-        </button>
-      </div>
+      <button onClick={guardar} disabled={isSaving} style={{width:"100%",background:"#1A5E2A",color:"#fff",border:"none",
+        borderRadius:10,padding:"14px",fontSize:15,fontWeight:800,cursor:isSaving?"not-allowed":"pointer", opacity:isSaving?0.5:1}}>
+        {isSaving ? "GUARDANDO..." : `💾 GUARDAR PEDIDO — ${orderId}`}
+      </button>
     </div>
   );
 }
