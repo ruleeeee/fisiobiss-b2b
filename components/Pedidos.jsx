@@ -1,12 +1,11 @@
-// components/Pedidos.jsx
 import { useState, useMemo } from "react";
 import { $, N, P, ESTADOS } from "../lib/constants";
-
+ 
 const selStyle={background:"#0D1F12",border:"1px solid #1A3520",color:"#E8F5EE",padding:"8px 12px",borderRadius:8,fontSize:13,cursor:"pointer"};
 const inpStyle={background:"#0A1A0C",border:"1px solid #1A3520",color:"#90CBF9",padding:"9px 12px",borderRadius:8,fontSize:13,width:"100%",boxSizing:"border-box"};
 const card={background:"#0D1F12",border:"1px solid #1A3520",borderRadius:12,padding:"18px 20px",marginBottom:14};
 function Empty({msg}){return <div style={{padding:"32px 20px",textAlign:"center",color:"#3A6A46",fontSize:13}}>📭 {msg}</div>}
-
+ 
 export default function Pedidos({ orders, updateStatus, notify }) {
   const [search, setSearch]   = useState("");
   const [fEst,   setFEst]     = useState("Todos");
@@ -15,10 +14,10 @@ export default function Pedidos({ orders, updateStatus, notify }) {
   const [detail, setDetail]   = useState(null);
   const [page,   setPage]     = useState(1);
   const PER_PAGE = 20;
-
+ 
   const allMonths=[...new Set(orders.map(o=>o.fecha?.slice(0,7)).filter(Boolean))].sort().reverse();
   const allVendors=["Todos",...new Set(orders.map(o=>o.vendedor).filter(Boolean))];
-
+ 
   // 1. Filtrado original
   const filtered = useMemo(()=>orders.filter(o=>{
     const s=search.toLowerCase();
@@ -28,7 +27,7 @@ export default function Pedidos({ orders, updateStatus, notify }) {
     const mV=fVend==="Todos"||o.vendedor===fVend;
     return mS&&mE&&mM&&mV;
   }),[orders,search,fEst,fMes,fVend]);
-
+ 
   // 2. Ordenamiento inteligente (Del más nuevo al más antiguo según el número de ID)
   const sortedOrders = useMemo(() => {
     return [...filtered].sort((a, b) => {
@@ -37,11 +36,11 @@ export default function Pedidos({ orders, updateStatus, notify }) {
       return numB - numA; 
     });
   }, [filtered]);
-
+ 
   // 3. Paginación aplicada a la lista ordenada
   const pages = Math.ceil(sortedOrders.length/PER_PAGE);
   const paged = sortedOrders.slice((page-1)*PER_PAGE, page*PER_PAGE);
-
+ 
   const updEst = async (id, est) => {
     try {
       await updateStatus(id, est);
@@ -51,18 +50,18 @@ export default function Pedidos({ orders, updateStatus, notify }) {
       notify("Error al actualizar","err");
     }
   };
-
+ 
   const estColor={"Pendiente":"#E87040","Shipit Creado":"#4A90D9","Despachado":"#F0B429","Entregado":"#52B788"};
-
+ 
   if(detail) return <OrderDetail order={detail} onClose={()=>setDetail(null)} onUpdateEst={updEst}/>;
-
+ 
   return (
     <div>
       <div style={{display:"flex",gap:12,marginBottom:18,alignItems:"center",flexWrap:"wrap"}}>
         <div style={{fontSize:22,fontWeight:800,flex:1}}>Pedidos</div>
         <span style={{fontSize:12,color:"#3A6A46"}}>{sortedOrders.length} resultados</span>
       </div>
-
+ 
       <div style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap"}}>
         <input value={search} onChange={e=>{setSearch(e.target.value);setPage(1);}}
           placeholder="🔍 Buscar ID, cliente, región..."
@@ -79,7 +78,7 @@ export default function Pedidos({ orders, updateStatus, notify }) {
           {allVendors.map(v=><option key={v}>{v}</option>)}
         </select>
       </div>
-
+ 
       <div style={{background:"#0D1F12",border:"1px solid #1A3520",borderRadius:12,overflow:"hidden"}}>
         <div style={{display:"grid",gridTemplateColumns:"100px 85px 1fr 110px 85px 110px 120px",gap:10,
           padding:"9px 16px",borderBottom:"1px solid #1A3520",background:"#0A1A0C"}}>
@@ -87,7 +86,7 @@ export default function Pedidos({ orders, updateStatus, notify }) {
             <div key={h} style={{fontSize:9,fontWeight:700,color:"#3A6A46",letterSpacing:1}}>{h.toUpperCase()}</div>
           ))}
         </div>
-
+ 
         {paged.length===0 ? <Empty msg="Sin resultados"/> : (
           <div>
             {paged.map((o,i)=>(
@@ -119,7 +118,7 @@ export default function Pedidos({ orders, updateStatus, notify }) {
             ))}
           </div>
         )}
-
+ 
         {pages>1 && (
           <div style={{display:"flex",justifyContent:"center",gap:6,padding:"12px",borderTop:"1px solid #1A3520"}}>
             {Array.from({length:pages},(_,i)=>(
@@ -132,7 +131,7 @@ export default function Pedidos({ orders, updateStatus, notify }) {
           </div>
         )}
       </div>
-
+ 
       {/* Recuadro Inferior de Resumen */}
       <div style={{
         background: "#0D1F12", border: "1px solid #1A3520", padding: "14px 20px", 
@@ -146,10 +145,18 @@ export default function Pedidos({ orders, updateStatus, notify }) {
     </div>
   );
 }
-
+ 
 function OrderDetail({order,onClose,onUpdateEst}){
-  const gp=order.totalPagar/1.19-(order.cogs||0);
-  const mg=order.totalPagar?gp/(order.totalPagar/1.19):0;
+  // Recalcular en tiempo real desde los items actuales
+  // (cubre el caso de ediciones de cantidad hechas directamente en el sheet)
+  const liveItems    = (order.items||[]).filter(it=>it.qty>0);
+  const subtotal     = liveItems.reduce((s,it)=>s+it.qty*it.precio, 0);
+  const costoEnvio   = order.costoEnvio||0;
+  const totalPagar   = subtotal + costoEnvio;
+  const totalUnids   = liveItems.reduce((s,it)=>s+it.qty+(it.regalo||0), 0);
+  const cogs         = liveItems.reduce((s,it)=>s+it.qty*(it.costo||0), 0);
+  const gp           = totalPagar/1.19 - cogs;
+  const mg           = totalPagar ? gp/(totalPagar/1.19) : 0;
   return (
     <div>
       <button onClick={onClose} style={{background:"transparent",border:"1px solid #1A3520",color:"#5A8A66",
@@ -182,10 +189,10 @@ function OrderDetail({order,onClose,onUpdateEst}){
             ))}
             <div style={{borderTop:"1px solid #1A3520",marginTop:10,paddingTop:10}}>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:5,color:"#3A6A46"}}>
-                <span>Envío</span><span>{$(order.costoEnvio)}</span>
+                <span>Envío</span><span>{$(costoEnvio)}</span>
               </div>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:18,fontWeight:800}}>
-                <span>Total</span><span style={{color:"#52B788"}}>{$(order.totalPagar)}</span>
+                <span>Total</span><span style={{color:"#52B788"}}>{$(totalPagar)}</span>
               </div>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#3A6A46",marginTop:6}}>
                 <span>Gross Profit est.</span>
