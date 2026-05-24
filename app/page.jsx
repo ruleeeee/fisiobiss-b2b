@@ -1,10 +1,9 @@
-// app/page.jsx
 "use client";
 import { C } from "../lib/constants";
 import { useState } from "react";
 import { useOrders } from "../hooks/usefirestore";
 import { addOrder, updateOrderStatus } from "../lib/db";
-
+ 
 // Componentes
 import AppShell    from "../components/appshell";
 import Dashboard   from "../components/dashboard";
@@ -13,35 +12,36 @@ import Pedidos     from "../components/pedidos";
 import Rentabilidad from "../components/rentabilidad";
 import Setup       from "../components/setup";
 import ConnError   from "../components/ui/connerror";
-
+ 
 export default function Home() {
   const [view, setView] = useState("dashboard");
   const [toast, setToast] = useState(null);
-
+ 
   // ── Data hook (Google Sheets via API Routes) ──
   const {
     orders, nextId, loading, error,
     syncing, lastSync,
     refresh, updateLocalStatus, addLocalOrder,
   } = useOrders();
-
+ 
   // ── Handlers ─────────────────────────────────
   const notify = (msg, type = "ok") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3200);
   };
-
+ 
   const handleAddOrder = async (order) => {
     try {
-      addLocalOrder(order);                     // optimistic update
-      await addOrder(order);                    // persist to Sheets
+      addLocalOrder(order);                     // optimistic update inmediato
+      await addOrder(order);                    // guardar en Google Sheets (con ID ahora)
+      await refresh();                          // sincronizar con el sheet para obtener datos reales
       notify(`✅ ${order.id} guardado en Google Sheets`);
     } catch (err) {
       notify("❌ Error al guardar: " + err.message, "err");
-      refresh();                                // revert on failure
+      refresh();                                // revertir en caso de error
     }
   };
-
+ 
   const handleUpdateStatus = async (id, estado) => {
     try {
       updateLocalStatus(id, estado);            // optimistic update
@@ -52,7 +52,7 @@ export default function Home() {
       refresh();
     }
   };
-
+ 
   // ── Pantallas de estado ───────────────────────
   if (loading) return (
     <div style={{ minHeight:"100vh", background:C.bg, display:"flex",
@@ -68,9 +68,9 @@ export default function Home() {
       <style>{`@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}`}</style>
     </div>
   );
-
+ 
   if (error) return <ConnError error={error} onRetry={refresh}/>;
-
+ 
   return (
     <>
       <AppShell
@@ -102,7 +102,7 @@ export default function Home() {
         {view === "rentabilidad" && <Rentabilidad orders={orders}/>}
         {view === "setup"        && <Setup onSeed={refresh} notify={notify}/>}
       </AppShell>
-
+ 
       {/* Toast de notificaciones */}
       {toast && (
         <div style={{

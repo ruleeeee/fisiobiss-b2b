@@ -6,9 +6,9 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getAllOrders, getNextId } from "../lib/db";
-
+ 
 const POLL_INTERVAL = 30_000; // 30 segundos
-
+ 
 export function useOrders() {
   const [orders,  setOrders]  = useState([]);
   const [nextId,  setNextId]  = useState(1);
@@ -17,7 +17,7 @@ export function useOrders() {
   const [syncing, setSyncing] = useState(false);
   const [lastSync,setLastSync]= useState(null);
   const timerRef = useRef(null);
-
+ 
   const fetchOrders = useCallback(async (silent = false) => {
     if (!silent) setSyncing(true);
     try {
@@ -34,28 +34,28 @@ export function useOrders() {
       if (!silent) setSyncing(false);
     }
   }, []);
-
+ 
   // Carga inicial + polling
   useEffect(() => {
     fetchOrders(false);
     timerRef.current = setInterval(() => fetchOrders(true), POLL_INTERVAL);
     return () => clearInterval(timerRef.current);
   }, [fetchOrders]);
-
-  /** Fuerza una re-sincronización manual */
+ 
+  /** Fuerza una re-sincronización manual (retorna Promise) */
   const refresh = () => fetchOrders(false);
-
+ 
   /** Actualiza el estado localmente sin esperar al próximo poll */
   const updateLocalStatus = (id, estado) => {
     setOrders(prev => prev.map(o => o.id === id ? { ...o, estado } : o));
   };
-
+ 
   /** Agrega un pedido localmente (optimistic update) */
   const addLocalOrder = (order) => {
     setOrders(prev => [...prev, order]);
     setNextId(n => n + 1);
   };
-
+ 
   return {
     orders,
     nextId,
@@ -68,6 +68,7 @@ export function useOrders() {
     addLocalOrder,
   };
 }
-
+ 
 // Exportación legacy para compatibilidad con el nombre anterior
 export { useOrders as useFirestore };
+ 
