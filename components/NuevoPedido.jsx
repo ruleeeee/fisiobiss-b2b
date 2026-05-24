@@ -1,15 +1,17 @@
-// components/NuevoPedido.jsx
 import { useState } from "react";
 import { $, N, P, today, PRODUCTS, REGIONS, VENDORS, ESTADOS, PAGOS } from "../lib/constants";
-
+ 
 const inpStyle={background:"#0A1A0C",border:"1px solid #1A3520",color:"#90CBF9",padding:"9px 12px",borderRadius:8,fontSize:13,width:"100%",boxSizing:"border-box"};
 const labelSt={fontSize:10,color:"#5A8A66",fontWeight:700,letterSpacing:1,marginBottom:4,display:"block"};
 const card={background:"#0D1F12",border:"1px solid #1A3520",borderRadius:12,padding:"18px 20px",marginBottom:14};
-
+ 
+// Field definido FUERA del componente para evitar remount en cada render
+const Field=({label,children})=><div><label style={labelSt}>{label}</label>{children}</div>;
+ 
 export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
   const prods = PRODUCTS.filter(p=>p.active);
   const emptyItems = ()=>prods.map(p=>({...p,qty:0,regalo:0}));
-
+ 
   const [f, setF] = useState({
     fecha:today(),vendedor:"Vicente",cliente:"",telefono:"",email:"",
     direccion:"",region:"Metropolitana (RM)",items:emptyItems(),
@@ -17,15 +19,15 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
   });
   const [search, setSearch] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-
+ 
   // MANEJADOR DE CAMBIOS OPTIMIZADO: No causa re-render innecesario de todo el componente
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setF(x => ({ ...x, [name]: value }));
   };
-
+ 
   const setQty=(id,field,val)=>setF(x=>({...x,items:x.items.map(it=>it.id===id?{...it,[field]:Math.max(0,+val||0)}:it)}));
-
+ 
   const envio=(REGIONS.find(r=>r.name===f.region)||{}).envio||0;
   const active=f.items.filter(it=>it.qty>0);
   const subtotal=active.reduce((s,it)=>s+it.qty*it.precio,0);
@@ -35,9 +37,9 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
   const gross=total/1.19-cogs;
   const margin=total?gross/(total/1.19):0;
   const orderId=`PED-${String(nextId).padStart(3,"0")}`;
-
+ 
   const filteredProds=f.items.filter(it=>!search||it.name.toLowerCase().includes(search.toLowerCase()));
-
+ 
   const guardar = async () => {
     if(!f.cliente.trim()){notify("Cliente es obligatorio","err");return;}
     if(active.length===0){notify("Agrega al menos un producto","err");return;}
@@ -57,9 +59,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
       setIsSaving(false);
     }
   };
-
-  const Field=({label,name,children})=><div><label style={labelSt}>{label}</label>{children}</div>;
-
+ 
   return (
     <div style={{maxWidth:920}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
@@ -68,7 +68,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
           ID: {orderId}
         </div>
       </div>
-
+ 
       <div style={card}>
         <div style={{fontSize:10,fontWeight:700,color:"#52B788",letterSpacing:1,marginBottom:14}}>DATOS DEL CLIENTE</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
@@ -92,7 +92,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
           <input name="direccion" value={f.direccion} onChange={handleInputChange} style={inpStyle} placeholder="Calle, número, depto., ciudad"/>
         </div>
       </div>
-
+ 
       {/* Products list stays the same */}
       <div style={card}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
@@ -129,7 +129,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
           })}
         </div>
       </div>
-
+ 
       {/* Summary section stays the same */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
         <div style={card}>
@@ -145,7 +145,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
             </div>
           </div>
         </div>
-
+ 
         <div style={card}>
           <div style={{fontSize:10,fontWeight:700,color:"#52B788",letterSpacing:1,marginBottom:14}}>INFORMACIÓN ADICIONAL</div>
           <div style={{marginBottom:10}}>
@@ -167,7 +167,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
           </div>
         </div>
       </div>
-
+ 
       <button onClick={guardar} disabled={isSaving} style={{width:"100%",background:"#1A5E2A",color:"#fff",border:"none",
         borderRadius:10,padding:"14px",fontSize:15,fontWeight:800,cursor:isSaving?"not-allowed":"pointer", opacity:isSaving?0.5:1}}>
         {isSaving ? "GUARDANDO..." : `💾 GUARDAR PEDIDO — ${orderId}`}
