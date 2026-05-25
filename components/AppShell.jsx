@@ -1,7 +1,7 @@
 // components/AppShell.jsx
 "use client";
 import React from "react";
-
+ 
 export default function AppShell({ children, view, setView, ordersCount, syncing, lastSync, onRefresh }) {
   const TABS = [
     {id:"dashboard",icon:"◈",label:"Dashboard"},
@@ -10,7 +10,7 @@ export default function AppShell({ children, view, setView, ordersCount, syncing
     {id:"rentabilidad",icon:"$",label:"Rentabilidad"},
     {id:"setup",icon:"⚙",label:"Parámetros"},
   ];
-
+ 
   return (
     <div style={{minHeight:"100vh",background:"#07100A",color:"#E8F5EE",fontFamily:"'DM Sans',system-ui,sans-serif"}}>
       {/* NAV SUPERIOR ESTILO v3 */}
@@ -48,9 +48,25 @@ export default function AppShell({ children, view, setView, ordersCount, syncing
             </button>
           )}
           <span style={{color:"#2A5A36"}}>{ordersCount || 0} pedidos</span>
+          <button
+            onClick={async () => {
+              await fetch("/api/auth/logout", { method: "POST" });
+              window.location.href = "/login";
+            }}
+            title="Cerrar sesión"
+            style={{
+              background:"transparent", border:"1px solid #1A3520",
+              color:"#3A6A46", padding:"4px 10px", borderRadius:6,
+              cursor:"pointer", fontSize:11,
+            }}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor="#E87040";e.currentTarget.style.color="#E87040";}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor="#1A3520";e.currentTarget.style.color="#3A6A46";}}
+          >
+            ⎋ Salir
+          </button>
         </div>
       </nav>
-
+ 
       {/* ÁREA DE CONTENIDO */}
       <div style={{padding:"20px 24px",maxWidth:1440,margin:"0 auto"}}>
         {children}
