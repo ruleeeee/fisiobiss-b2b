@@ -6,19 +6,23 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build:cf": "opennextjs-cloudflare build",
+    "preview:cf": "opennextjs-cloudflare preview"
   },
   "dependencies": {
+    "google-auth-library": "^9.14.2",
+    "google-spreadsheet": "^4.1.4",
     "next": "^14.2.35",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "recharts": "^2.12.7",
-    "google-spreadsheet": "^4.1.4",
-    "google-auth-library": "^9.14.2"
+    "recharts": "^2.12.7"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.19.11",
     "eslint": "^8",
-    "eslint-config-next": "^14.2.35"
+    "eslint-config-next": "^14.2.35",
+    "wrangler": "^4.94.0"
   },
   "overrides": {
     "resolve": "2.0.0-next.5"
