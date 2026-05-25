@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
  
+const SESSION_TOKEN = "fb2b_tok_d2b116085634_secure_2026";
+ 
 export function middleware(request) {
   const { pathname } = request.nextUrl;
  
-  // Rutas públicas: login y sus APIs
   const isPublic =
     pathname === "/login" ||
     pathname.startsWith("/api/auth") ||
@@ -12,20 +13,12 @@ export function middleware(request) {
  
   if (isPublic) return NextResponse.next();
  
-  // Verificar cookie de sesión
-  const session    = request.cookies.get("fb2b_session")?.value;
-  const validToken = process.env.SESSION_SECRET;
+  const session = request.cookies.get("fb2b_session")?.value;
+  if (session === SESSION_TOKEN) return NextResponse.next();
  
-  // Si SESSION_SECRET no está configurada O la cookie no coincide → redirigir
-  const isAuthenticated = validToken && session && session === validToken;
- 
-  if (!isAuthenticated) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("from", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
- 
-  return NextResponse.next();
+  const url = new URL("/login", request.url);
+  url.searchParams.set("from", pathname);
+  return NextResponse.redirect(url);
 }
  
 export const config = {

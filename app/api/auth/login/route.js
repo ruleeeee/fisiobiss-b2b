@@ -1,35 +1,27 @@
 import { NextResponse } from "next/server";
  
+// Credenciales hardcoded — cambiar aquí si se quiere actualizar
+const CREDS = {
+  user:  "fisiobissb2b_admin",
+  pass:  "Fb2b@S3cur3#2026",
+  token: "fb2b_tok_d2b116085634_secure_2026",
+};
+ 
 export async function POST(req) {
   try {
     const { username, password } = await req.json();
- 
-    const validUser = process.env.AUTH_USERNAME;
-    const validPass = process.env.AUTH_PASSWORD;
-    const secret    = process.env.SESSION_SECRET;
- 
-    if (!validUser || !validPass || !secret) {
-      return NextResponse.json({ error: "Servidor no configurado." }, { status: 500 });
+    if (username === CREDS.user && password === CREDS.pass) {
+      const res = NextResponse.json({ ok: true });
+      res.cookies.set("fb2b_session", CREDS.token, {
+        httpOnly: true,
+        secure:   process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge:   60 * 60 * 8, // 8 horas
+        path:     "/",
+      });
+      return res;
     }
- 
-    const ok = username === validUser && password === validPass;
- 
-    if (!ok) {
-      return NextResponse.json(
-        { error: "Usuario o contraseña incorrectos." },
-        { status: 401 }
-      );
-    }
- 
-    const res = NextResponse.json({ ok: true });
-    res.cookies.set("fb2b_session", secret, {
-      httpOnly: true,
-      secure:   process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge:   60 * 60 * 8, // 8 horas
-      path:     "/",
-    });
-    return res;
+    return NextResponse.json({ error: "Usuario o contraseña incorrectos." }, { status: 401 });
   } catch {
     return NextResponse.json({ error: "Error interno." }, { status: 500 });
   }
