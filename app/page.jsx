@@ -1,17 +1,17 @@
 "use client";
 import { C } from "../lib/constants";
 import { useState } from "react";
-import { useOrders } from "../hooks/usefirestore";
+import { useOrders } from "../hooks/useFirestore";
 import { addOrder, updateOrderStatus } from "../lib/db";
  
 // Componentes
-import AppShell    from "../components/appshell";
-import Dashboard   from "../components/dashboard";
-import NuevoPedido from "../components/nuevopedido";
-import Pedidos     from "../components/pedidos";
-import Rentabilidad from "../components/rentabilidad";
-import Setup       from "../components/setup";
-import ConnError   from "../components/ui/connerror";
+import AppShell    from "../components/AppShell";
+import Dashboard   from "../components/Dashboard";
+import NuevoPedido from "../components/NuevoPedido";
+import Pedidos     from "../components/Pedidos";
+import Rentabilidad from "../components/Rentabilidad";
+import Setup       from "../components/Setup";
+import ConnError   from "../components/ui/ConnError";
  
 export default function Home() {
   const [view, setView] = useState("dashboard");

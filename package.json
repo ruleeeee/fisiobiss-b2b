@@ -19,5 +19,11 @@
   "devDependencies": {
     "eslint": "^8",
     "eslint-config-next": "^14.2.35"
+  },
+  "overrides": {
+    "resolve": "2.0.0-next.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
