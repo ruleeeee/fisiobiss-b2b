@@ -6,7 +6,7 @@ const inpStyle={background:"#0A1A0C",border:"1px solid #1A3520",color:"#90CBF9",
 const card={background:"#0D1F12",border:"1px solid #1A3520",borderRadius:12,padding:"18px 20px",marginBottom:14};
 function Empty({msg}){return <div style={{padding:"32px 20px",textAlign:"center",color:"#3A6A46",fontSize:13}}>📭 {msg}</div>}
  
-export default function Pedidos({ orders, updateStatus, notify }) {
+export default function Pedidos({ orders, updateStatus, deleteOrder, notify }) {
   const [search, setSearch]   = useState("");
   const [fEst,   setFEst]     = useState("Todos");
   const [fMes,   setFMes]     = useState("");
@@ -50,6 +50,17 @@ export default function Pedidos({ orders, updateStatus, notify }) {
       notify("Error al actualizar","err");
     }
   };
+
+  const delOrder = async (id, e) => {
+    e.stopPropagation();
+    if(!confirm(`¿Eliminar pedido ${id}? Esta acción no se puede deshacer.`)) return;
+    try {
+      await deleteOrder(id);
+      notify(`Pedido ${id} eliminado`);
+    } catch(err) {
+      notify("Error al eliminar pedido","err");
+    }
+  };
  
   const estColor={"Pendiente":"#E87040","Shipit Creado":"#4A90D9","Despachado":"#F0B429","Entregado":"#52B788"};
  
@@ -80,9 +91,9 @@ export default function Pedidos({ orders, updateStatus, notify }) {
       </div>
  
       <div style={{background:"#0D1F12",border:"1px solid #1A3520",borderRadius:12,overflow:"hidden"}}>
-        <div style={{display:"grid",gridTemplateColumns:"100px 85px 1fr 110px 85px 110px 120px",gap:10,
+        <div style={{display:"grid",gridTemplateColumns:"100px 85px 1fr 110px 85px 110px 120px 44px",gap:10,
           padding:"9px 16px",borderBottom:"1px solid #1A3520",background:"#0A1A0C"}}>
-          {["ID","Fecha","Cliente / Región","Vendedor","Uds.","Total","Estado"].map(h=>(
+          {["ID","Fecha","Cliente / Región","Vendedor","Uds.","Total","Estado",""].map(h=>(
             <div key={h} style={{fontSize:9,fontWeight:700,color:"#3A6A46",letterSpacing:1}}>{h.toUpperCase()}</div>
           ))}
         </div>
@@ -91,7 +102,7 @@ export default function Pedidos({ orders, updateStatus, notify }) {
           <div>
             {paged.map((o,i)=>(
               <div key={o.id} onClick={()=>setDetail(o)}
-                style={{display:"grid",gridTemplateColumns:"100px 85px 1fr 110px 85px 110px 120px",
+                style={{display:"grid",gridTemplateColumns:"100px 85px 1fr 110px 85px 110px 120px 44px",
                   gap:10,padding:"11px 16px",cursor:"pointer",transition:"background .1s",
                   borderBottom:"1px solid #0D1A0F",background:i%2?"transparent":"rgba(255,255,255,.01)"}}
                 onMouseEnter={e=>e.currentTarget.style.background="rgba(82,183,136,.05)"}
@@ -113,6 +124,14 @@ export default function Pedidos({ orders, updateStatus, notify }) {
                       fontSize:10,fontWeight:700,cursor:"pointer",width:"100%"}}>
                     {ESTADOS.map(e=><option key={e} style={{background:"#0D1F12",color:"#E8F5EE"}}>{e}</option>)}
                   </select>
+                </div>
+                <div onClick={e=>delOrder(o.id,e)} style={{display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  <button style={{background:"transparent",border:"1px solid #3A1010",color:"#A03030",
+                    borderRadius:6,width:28,height:28,cursor:"pointer",fontSize:14,display:"flex",
+                    alignItems:"center",justifyContent:"center",lineHeight:1}}
+                    title="Eliminar pedido">
+                    🗑
+                  </button>
                 </div>
               </div>
             ))}

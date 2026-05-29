@@ -56,6 +56,11 @@ export function useOrders() {
     setNextId(n => n + 1);
   };
  
+  /** Elimina un pedido localmente (optimistic update) */
+  const removeLocalOrder = (id) => {
+    setOrders(prev => prev.filter(o => o.id !== id));
+  };
+
   return {
     orders,
     nextId,
@@ -66,9 +71,9 @@ export function useOrders() {
     refresh,
     updateLocalStatus,
     addLocalOrder,
+    removeLocalOrder,
   };
 }
  
 // Exportación legacy para compatibilidad con el nombre anterior
 export { useOrders as useFirestore };
- 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { $, N, P, today, PRODUCTS, REGIONS, VENDORS, ESTADOS, PAGOS } from "../lib/constants";
+import { $, N, P, today, PRODUCTS, REGIONS as FALLBACK_REGIONS, VENDORS, ESTADOS, PAGOS } from "../lib/constants";
  
 const inpStyle={background:"#0A1A0C",border:"1px solid #1A3520",color:"#90CBF9",padding:"9px 12px",borderRadius:8,fontSize:13,width:"100%",boxSizing:"border-box"};
 const labelSt={fontSize:10,color:"#5A8A66",fontWeight:700,letterSpacing:1,marginBottom:4,display:"block"};
@@ -8,7 +8,8 @@ const card={background:"#0D1F12",border:"1px solid #1A3520",borderRadius:12,padd
 // Field definido FUERA del componente para evitar remount en cada render
 const Field=({label,children})=><div><label style={labelSt}>{label}</label>{children}</div>;
  
-export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
+export default function NuevoPedido({ nextId, addOrder, notify, setView, regions: propRegions }) {
+  const REGIONS = propRegions?.length ? propRegions : FALLBACK_REGIONS;
   const prods = PRODUCTS.filter(p=>p.active);
   const emptyItems = ()=>prods.map(p=>({...p,qty:0,regalo:0}));
  
@@ -19,6 +20,8 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
   });
   const [search, setSearch] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [descuentoPct, setDescuentoPct] = useState("");
+  const [totalManual, setTotalManual] = useState("");
  
   // MANEJADOR DE CAMBIOS OPTIMIZADO: No causa re-render innecesario de todo el componente
   const handleInputChange = (e) => {
@@ -32,7 +35,11 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
   const active=f.items.filter(it=>it.qty>0);
   const subtotal=active.reduce((s,it)=>s+it.qty*it.precio,0);
   const totalUds=active.reduce((s,it)=>s+it.qty,0);
-  const total=subtotal+envio;
+  const pct = Math.min(100, Math.max(0, +descuentoPct||0));
+  const baseParaDescuento = subtotal + envio;
+  const descuentoVal = pct > 0 ? Math.round(baseParaDescuento * pct / 100) : 0;
+  const totalCalculado = baseParaDescuento - descuentoVal;
+  const total = totalManual !== "" ? Math.max(0, +totalManual||0) : totalCalculado;
   const cogs=active.reduce((s,it)=>s+it.qty*it.costo,0);
   const gross=total/1.19-cogs;
   const margin=total?gross/(total/1.19):0;
@@ -45,13 +52,15 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
     if(active.length===0){notify("Agrega al menos un producto","err");return;}
     
     setIsSaving(true);
-    const order={...f, id:orderId, subtotal, costoEnvio:envio, totalPagar:total, totalUnidades:totalUds, cogs };
+    const order={...f, id:orderId, subtotal, costoEnvio:envio, descuento:descuentoVal, totalPagar:total, totalUnidades:totalUds, cogs };
     
     try {
       await addOrder(order);
       notify(`Pedido ${orderId} guardado ✓`);
       setF({fecha:today(),vendedor:"Vicente",cliente:"",telefono:"",email:"",direccion:"",region:"Metropolitana (RM)",items:emptyItems(),estado:"Pendiente",medioPago:"Transferencia",notas:""});
       setSearch("");
+      setDescuentoPct("");
+      setTotalManual("");
       setView("pedidos");
     } catch(err) {
       notify("Error guardando el pedido","err");
@@ -139,7 +148,61 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView }) {
               <span style={{color:"#5A8A66"}}>{l}</span><span style={{fontWeight:600}}>{v}</span>
             </div>
           ))}
+
+          {/* Descuento por porcentaje */}
+          <div style={{marginBottom:9}}>
+            <label style={{fontSize:10,color:"#5A8A66",fontWeight:700,letterSpacing:1,marginBottom:4,display:"block"}}>DESCUENTO (%)</label>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <div style={{position:"relative",flex:1}}>
+                <input
+                  type="number" min="0" max="100" step="1"
+                  value={descuentoPct}
+                  onChange={e=>{ setDescuentoPct(e.target.value); setTotalManual(""); }}
+                  placeholder="0"
+                  style={{...inpStyle,borderColor:"#2A3A1A",color:"#F0B429",fontSize:13,padding:"6px 28px 6px 10px"}}
+                />
+                <span style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",color:"#F0B429",fontSize:13,fontWeight:700,pointerEvents:"none"}}>%</span>
+              </div>
+              {/* Botones rápidos */}
+              {[5,10,15,20,30].map(p=>(
+                <button key={p} onClick={()=>{ setDescuentoPct(String(p)); setTotalManual(""); }}
+                  style={{background:+descuentoPct===p?"#2A3A1A":"transparent",border:"1px solid #2A3A1A",
+                    color:+descuentoPct===p?"#F0B429":"#3A6A46",borderRadius:6,padding:"5px 8px",
+                    cursor:"pointer",fontSize:11,fontWeight:700,whiteSpace:"nowrap"}}>
+                  {p}%
+                </button>
+              ))}
+              {descuentoPct && (
+                <button onClick={()=>setDescuentoPct("")}
+                  style={{background:"transparent",border:"1px solid #3A1010",color:"#A03030",
+                    borderRadius:6,padding:"5px 8px",cursor:"pointer",fontSize:11}}>✕</button>
+              )}
+            </div>
+            {pct>0 && (
+              <div style={{fontSize:11,color:"#F0B429",marginTop:4}}>
+                − {$(descuentoVal)} ({pct}% sobre {$(baseParaDescuento)})
+              </div>
+            )}
+          </div>
+
           <div style={{borderTop:"1px solid #1A3520",marginTop:12,paddingTop:12}}>
+            {/* Total calculado (referencia) */}
+            {totalManual!=="" && (
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"#3A6A46",marginBottom:6}}>
+                <span>Total calculado</span><span style={{textDecoration:"line-through"}}>{$(totalCalculado)}</span>
+              </div>
+            )}
+            {/* Total final override */}
+            <div style={{marginBottom:10}}>
+              <label style={{fontSize:10,color:"#52B788",fontWeight:700,letterSpacing:1,marginBottom:4,display:"block"}}>TOTAL FINAL (editable)</label>
+              <input
+                type="number" min="0"
+                value={totalManual}
+                onChange={e=>{ setTotalManual(e.target.value); setDescuento(""); }}
+                placeholder={String(totalCalculado)}
+                style={{...inpStyle,borderColor:"#2D5A3A",color:"#52B788",fontSize:16,fontWeight:800,padding:"8px 10px"}}
+              />
+            </div>
             <div style={{display:"flex",justifyContent:"space-between",fontSize:20,fontWeight:800}}>
               <span style={{color:"#7EC8A4"}}>TOTAL</span><span style={{color:"#52B788"}}>{$(total)}</span>
             </div>

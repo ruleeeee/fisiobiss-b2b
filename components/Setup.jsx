@@ -5,11 +5,16 @@ import { $, P, REGIONS, VENDORS, PRODUCTS as INITIAL_PRODUCTS } from "../lib/con
 const inpStyle = { background: "#0A1A0C", border: "1px solid #1A3520", color: "#90CBF9", padding: "9px 12px", borderRadius: 8, fontSize: 13, width: "100%", boxSizing: "border-box" };
 const card = { background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 12, padding: "18px 20px", marginBottom: 14 };
 
-export default function Setup() {
+export default function Setup({ regions: propRegions, setRegions: propSetRegions, onSaveRegions, notify }) {
   const [sub, setSub] = useState("productos");
   const [prods, setProds] = useState(INITIAL_PRODUCTS);
   const [newP, setNewP] = useState({ name: "", precio: "", costo: "" });
   const [isSaving, setIsSaving] = useState(false);
+  // Usar regiones desde props (ya vienen del hook global)
+  const regions = propRegions ?? REGIONS;
+  const setRegions = propSetRegions ?? (() => {});
+  const [isSavingRegions, setIsSavingRegions] = useState(false);
+  const [regionsSaved, setRegionsSaved] = useState(false);
 
   const updProd = (id, field, val) => {
     setProds(prev => prev.map(p => 
@@ -30,6 +35,27 @@ export default function Setup() {
     
     setProds(prev => [...prev, { id, ...newP, active: true }]);
     setNewP({ name: "", precio: "", costo: "" });
+  };
+
+  const updRegion = (name, val) => {
+    setRegions(prev => prev.map(r => r.name === name ? { ...r, envio: Math.max(0, +val||0) } : r));
+    setRegionsSaved(false);
+  };
+
+  const handleSaveRegions = async () => {
+    setIsSavingRegions(true);
+    setRegionsSaved(false);
+    try {
+      if (onSaveRegions) {
+        await onSaveRegions(regions);
+      }
+      setRegionsSaved(true);
+      setTimeout(() => setRegionsSaved(false), 3000);
+    } catch (err) {
+      if (notify) notify("❌ Error al guardar costos", "err");
+    } finally {
+      setIsSavingRegions(false);
+    }
   };
 
   // Función para manejar el guardado general de los precios
@@ -163,16 +189,31 @@ export default function Setup() {
 
       {sub === "regiones" && (
         <div style={card}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "#52B788", letterSpacing: 1, marginBottom: 14 }}>REGIONES Y COSTOS DE ENVÍO</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#52B788", letterSpacing: 1 }}>REGIONES Y COSTOS DE ENVÍO</div>
+            <button onClick={handleSaveRegions} disabled={isSavingRegions} style={{
+              background: regionsSaved ? "#0D1F12" : "#1A5E2A", color: regionsSaved ? "#52B788" : "#fff",
+              border: `1px solid ${regionsSaved ? "#2D5A3A" : "#1A5E2A"}`,
+              borderRadius: 8, padding: "7px 16px", cursor: isSavingRegions ? "wait" : "pointer",
+              fontSize: 12, fontWeight: 700, transition: "0.2s", opacity: isSavingRegions ? 0.6 : 1
+            }}>
+              {isSavingRegions ? "Guardando..." : regionsSaved ? "✓ Guardado" : "💾 Confirmar Cambios"}
+            </button>
+          </div>
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8, marginBottom: 8 }}>
             {["Región", "Costo Envío (CLP)"].map(h => (
               <div key={h} style={{ fontSize: 9, fontWeight: 700, color: "#3A6A46", letterSpacing: 1 }}>{h.toUpperCase()}</div>
             ))}
           </div>
-          {REGIONS.map((r) => (
-            <div key={r.name} style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8, padding: "8px 0", borderBottom: "1px solid #0D1A0F" }}>
+          {regions.map((r) => (
+            <div key={r.name} style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8, padding: "6px 0", borderBottom: "1px solid #0D1A0F", alignItems: "center" }}>
               <div style={{ fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center" }}>{r.name}</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#F0B429", display: "flex", alignItems: "center" }}>{$(r.envio)}</div>
+              <input
+                type="number" min="0"
+                value={r.envio}
+                onChange={e => updRegion(r.name, e.target.value)}
+                style={{ ...inpStyle, padding: "5px 10px", fontSize: 13, fontWeight: 700, color: "#F0B429", borderColor: "#2A3A1A", textAlign: "right" }}
+              />
             </div>
           ))}
         </div>

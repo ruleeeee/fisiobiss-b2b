@@ -2,7 +2,8 @@
 import { C } from "../lib/constants";
 import { useState } from "react";
 import { useOrders } from "../hooks/useFirestore";
-import { addOrder, updateOrderStatus } from "../lib/db";
+import { useRegions } from "../hooks/useRegions";
+import { addOrder, updateOrderStatus, deleteOrder } from "../lib/db";
  
 // Componentes
 import AppShell    from "../components/AppShell";
@@ -21,8 +22,11 @@ export default function Home() {
   const {
     orders, nextId, loading, error,
     syncing, lastSync,
-    refresh, updateLocalStatus, addLocalOrder,
+    refresh, updateLocalStatus, addLocalOrder, removeLocalOrder,
   } = useOrders();
+
+  // ── Regiones / costos de envío ────────────────
+  const { regions, setRegions, updateRegions } = useRegions();
  
   // ── Handlers ─────────────────────────────────
   const notify = (msg, type = "ok") => {
@@ -32,20 +36,20 @@ export default function Home() {
  
   const handleAddOrder = async (order) => {
     try {
-      addLocalOrder(order);                     // optimistic update inmediato
-      await addOrder(order);                    // guardar en Google Sheets (con ID ahora)
-      await refresh();                          // sincronizar con el sheet para obtener datos reales
+      addLocalOrder(order);
+      await addOrder(order);
+      await refresh();
       notify(`✅ ${order.id} guardado en Google Sheets`);
     } catch (err) {
       notify("❌ Error al guardar: " + err.message, "err");
-      refresh();                                // revertir en caso de error
+      refresh();
     }
   };
  
   const handleUpdateStatus = async (id, estado) => {
     try {
-      updateLocalStatus(id, estado);            // optimistic update
-      await updateOrderStatus(id, estado);      // persist to Sheets
+      updateLocalStatus(id, estado);
+      await updateOrderStatus(id, estado);
       notify(`Estado actualizado → ${estado}`);
     } catch (err) {
       notify("❌ Error al actualizar estado", "err");
@@ -53,6 +57,28 @@ export default function Home() {
     }
   };
  
+  const handleDeleteOrder = async (id) => {
+    try {
+      removeLocalOrder(id);
+      await deleteOrder(id);
+      notify(`Pedido ${id} eliminado`);
+    } catch (err) {
+      notify("❌ Error al eliminar: " + err.message, "err");
+      refresh();
+    }
+  };
+
+  const handleSaveRegions = async (newRegions) => {
+    try {
+      await updateRegions(newRegions);
+      notify("✅ Costos de envío guardados en Google Sheets");
+    } catch (err) {
+      // El estado local ya se actualizó en updateRegions.
+      // Solo avisamos que la persistencia falló, sin bloquear el flujo.
+      notify("⚠️ Cambios aplicados en sesión (error al guardar en Sheet)", "warn");
+    }
+  };
+
   // ── Pantallas de estado ───────────────────────
   if (loading) return (
     <div style={{ minHeight:"100vh", background:C.bg, display:"flex",
@@ -90,24 +116,34 @@ export default function Home() {
             addOrder={handleAddOrder}
             notify={notify}
             setView={setView}
+            regions={regions}
           />
         )}
         {view === "pedidos"      && (
           <Pedidos
             orders={orders}
             updateStatus={handleUpdateStatus}
+            deleteOrder={handleDeleteOrder}
             notify={notify}
           />
         )}
         {view === "rentabilidad" && <Rentabilidad orders={orders}/>}
-        {view === "setup"        && <Setup onSeed={refresh} notify={notify}/>}
+        {view === "setup"        && (
+          <Setup
+            onSeed={refresh}
+            notify={notify}
+            regions={regions}
+            setRegions={setRegions}
+            onSaveRegions={handleSaveRegions}
+          />
+        )}
       </AppShell>
  
       {/* Toast de notificaciones */}
       {toast && (
         <div style={{
           position:"fixed", bottom:24, right:24,
-          background: toast.type === "ok" ? "#1A5E2A" : "#7B1D1D",
+          background: toast.type === "ok" ? "#1A5E2A" : toast.type === "warn" ? "#7A5000" : "#7B1D1D",
           color:"#fff", padding:"13px 20px", borderRadius:10,
           zIndex:9999, fontSize:13, fontWeight:600,
           boxShadow:"0 4px 24px rgba(0,0,0,.5)",
