@@ -36,9 +36,9 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
   const subtotal=active.reduce((s,it)=>s+it.qty*it.precio,0);
   const totalUds=active.reduce((s,it)=>s+it.qty,0);
   const pct = Math.min(100, Math.max(0, +descuentoPct||0));
-  const baseParaDescuento = subtotal + envio;
+  const baseParaDescuento = subtotal;
   const descuentoVal = pct > 0 ? Math.round(baseParaDescuento * pct / 100) : 0;
-  const totalCalculado = baseParaDescuento - descuentoVal;
+  const totalCalculado = baseParaDescuento - descuentoVal + envio;
   const total = totalManual !== "" ? Math.max(0, +totalManual||0) : totalCalculado;
   const cogs=active.reduce((s,it)=>s+it.qty*it.costo,0);
   const gross=total/1.19-cogs;
@@ -180,7 +180,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
             </div>
             {pct>0 && (
               <div style={{fontSize:11,color:"#F0B429",marginTop:4}}>
-                − {$(descuentoVal)} ({pct}% sobre {$(baseParaDescuento)})
+                − {$(descuentoVal)} ({pct}% sobre productos {$(baseParaDescuento)}) + envío {$(envio)}
               </div>
             )}
           </div>
