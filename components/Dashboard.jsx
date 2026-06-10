@@ -206,7 +206,7 @@ export default function Dashboard({ orders = [], syncing = false }) {
         </Chart>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
         <Chart title="Tendencia Mensual">
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={monthData}>
@@ -232,6 +232,58 @@ export default function Dashboard({ orders = [], syncing = false }) {
           </ResponsiveContainer>
         </Chart>
       </div>
+
+      {/* ── TOP 10 DISTRIBUIDORES ── */}
+      {(() => {
+        const TIER_COLORS = { oro: "#B8860B", plata: "#8EA8B8", verde: "#52B788", sin: "#4A5568" };
+        const TIER_ICONS  = { oro: "🏆", plata: "🥈", verde: "🌿", sin: "–" };
+        const getTierDash = (rev) => {
+          if (rev >= 500000) return { id: "oro",   label: "ORO",   color: "#B8860B" };
+          if (rev >= 300000) return { id: "plata", label: "PLATA", color: "#8EA8B8" };
+          if (rev >= 150000) return { id: "verde", label: "VERDE", color: "#52B788" };
+          return { id: "sin", label: "S/T", color: "#4A5568" };
+        };
+        const distMap = {};
+        filteredOrders.forEach(o => {
+          const key = o.cliente?.trim();
+          if (!key) return;
+          distMap[key] = (distMap[key] || 0) + (o.totalPagar || 0);
+        });
+        const top10 = Object.entries(distMap)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10)
+          .map(([nombre, rev]) => ({ nombre, rev, tier: getTierDash(rev) }));
+        if (!top10.length) return null;
+        return (
+          <Chart title={`Top 10 Distribuidores — ${mes}`}>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={top10.map(d => ({ name: d.nombre.length > 18 ? d.nombre.slice(0, 17) + "…" : d.nombre, v: d.rev, tier: d.tier.id }))} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#1A3520" horizontal={false} />
+                <XAxis type="number" tick={{ fill: "#4A7A56", fontSize: 9 }} tickFormatter={v => $(v).replace("$", "")} />
+                <YAxis type="category" dataKey="name" tick={{ fill: "#7EC8A4", fontSize: 9 }} width={130} />
+                <Tooltip content={({ active, payload, label }) => active && payload?.length ? (
+                  <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 8, padding: "8px 12px", fontSize: 12 }}>
+                    <div style={{ color: "#5A8A66", marginBottom: 4 }}>{label}</div>
+                    <div style={{ color: "#52B788", fontWeight: 700 }}>Revenue: {$(payload[0].value)}</div>
+                    <div style={{ color: TIER_COLORS[payload[0].payload.tier] || "#52B788", fontSize: 10 }}>
+                      Tier: {TIER_ICONS[payload[0].payload.tier]} {payload[0].payload.tier.toUpperCase()}
+                    </div>
+                  </div>
+                ) : null} />
+                <Bar dataKey="v" radius={[0, 4, 4, 0]} name="Revenue">
+                  {top10.map((d, i) => <Cell key={i} fill={d.tier.color} fillOpacity={0.85} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            <div style={{ display: "flex", gap: 16, marginTop: 6, fontSize: 10, color: "#5A8A66", justifyContent: "flex-end" }}>
+              <span style={{ color: "#B8860B" }}>🏆 Oro ≥$500k</span>
+              <span style={{ color: "#8EA8B8" }}>🥈 Plata ≥$300k</span>
+              <span style={{ color: "#52B788" }}>🌿 Verde ≥$150k</span>
+              <span style={{ color: "#4A5568" }}>– Sin tier</span>
+            </div>
+          </Chart>
+        );
+      })()}
     </div>
   );
 }

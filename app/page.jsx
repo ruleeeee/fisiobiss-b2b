@@ -10,6 +10,7 @@ import AppShell    from "../components/AppShell";
 import Dashboard   from "../components/Dashboard";
 import NuevoPedido from "../components/NuevoPedido";
 import Pedidos     from "../components/Pedidos";
+import Distribuidores from "../components/Distribuidores";
 import Rentabilidad from "../components/Rentabilidad";
 import Setup       from "../components/Setup";
 import ConnError   from "../components/ui/ConnError";
@@ -127,6 +128,7 @@ export default function Home() {
             notify={notify}
           />
         )}
+        {view === "distribuidores" && <Distribuidores orders={orders} />}
         {view === "rentabilidad" && <Rentabilidad orders={orders}/>}
         {view === "setup"        && (
           <Setup
