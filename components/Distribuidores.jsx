@@ -1,16 +1,17 @@
 // components/Distribuidores.jsx
 import { useState, useMemo } from "react";
 import {
-  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell,
 } from "recharts";
 import { $, N, P, PIE_COLORS } from "../lib/constants";
+import { buildClientIndex } from "../lib/clientIdentity";
 
-// ─── Tier config (basado en inversión mensual) ─────────────────────────────────
+// ─── Tier config ──────────────────────────────────────────────────────────────
 const TIERS = [
-  { id: "oro",   label: "ORO",   icon: "🏆", min: 500000, color: "#B8860B", bg: "#2A1F00", border: "#B8860B" },
-  { id: "plata", label: "PLATA", icon: "🥈", min: 300000, color: "#8EA8B8", bg: "#0F1F2A", border: "#5A8098" },
-  { id: "verde", label: "VERDE", icon: "🌿", min: 150000, color: "#52B788", bg: "#0D1F12", border: "#2A5A36" },
+  { id: "oro",   label: "ORO",      icon: "🏆", min: 500000, color: "#B8860B", bg: "#2A1F00", border: "#B8860B" },
+  { id: "plata", label: "PLATA",    icon: "🥈", min: 300000, color: "#8EA8B8", bg: "#0F1F2A", border: "#5A8098" },
+  { id: "verde", label: "VERDE",    icon: "🌿", min: 150000, color: "#52B788", bg: "#0D1F12", border: "#2A5A36" },
   { id: "sin",   label: "SIN TIER", icon: "–",  min: 0,      color: "#4A5568", bg: "#0F1418", border: "#2D3748" },
 ];
 
@@ -52,48 +53,48 @@ export default function Distribuidores({ orders = [] }) {
   const [selectedTier, setSelectedTier] = useState("todos");
   const [selectedDist, setSelectedDist] = useState(null);
 
-  // ─── Procesar todos los pedidos ────────────────────────────────────────────
+  // ─── Procesar pedidos: añadir mes/día ────────────────────────────────────
   const processed = useMemo(() =>
     orders.map(o => ({ ...o, ...parseDate(o.fecha) })).filter(o => o.month),
     [orders]
   );
 
-  // ─── Calcular gasto acumulado por distribuidor en el mes seleccionado ──────
+  // ─── Índice de identidad de clientes (union-find por tel + email) ─────────
+  // orderKeyMap: { orderId → clientKey }
+  // groups: { clientKey → { nombre, telefono, email, orderIds[] } }
+  const { orderKeyMap, groups } = useMemo(() => buildClientIndex(processed), [processed]);
+
+  // ─── Primera compra de cada cliente (en TODO el historial) ───────────────
+  const firstPurchaseMonth = useMemo(() => {
+    const fp = {};
+    processed.forEach(o => {
+      const key = orderKeyMap[o.id];
+      if (!key) return;
+      if (!fp[key] || o.month < fp[key]) fp[key] = o.month;
+    });
+    return fp;
+  }, [processed, orderKeyMap]);
+
+  // ─── Distribuidores del período seleccionado ─────────────────────────────
   const distData = useMemo(() => {
     const inPeriod = processed.filter(o => o.month === mes);
 
-    // Gasto total histórico por cliente (para detectar si es nuevo en el período)
-    const historyBefore = {};
-    processed.forEach(o => {
-      if (o.month < mes) {
-        const key = o.cliente?.trim();
-        if (!key) return;
-        if (!historyBefore[key]) historyBefore[key] = { firstMonth: o.month };
-        else if (o.month < historyBefore[key].firstMonth) historyBefore[key].firstMonth = o.month;
-      }
-    });
-
-    // Primer mes de compra de cada cliente (en TODO el historial)
-    const firstPurchaseMonth = {};
-    processed.forEach(o => {
-      const key = o.cliente?.trim();
-      if (!key) return;
-      if (!firstPurchaseMonth[key] || o.month < firstPurchaseMonth[key]) {
-        firstPurchaseMonth[key] = o.month;
-      }
-    });
-
-    // Agrupar por cliente en el período seleccionado
+    // Agrupar por clientKey
     const distMap = {};
     inPeriod.forEach(o => {
-      const key = o.cliente?.trim();
+      const key = orderKeyMap[o.id];
       if (!key) return;
+      const groupInfo = groups[key] || {};
       if (!distMap[key]) {
         distMap[key] = {
-          nombre: key,
+          _key: key,
+          nombre: groupInfo.nombre || o.cliente?.trim() || "Sin nombre",
+          nombres: groupInfo.nombres || [],
           region: o.region?.split("(")[0]?.trim() || "Otra",
-          telefono: o.telefono || "",
-          email: o.email || "",
+          telefono: groupInfo.telefono || "",
+          telefonos: groupInfo.telefonos || [],
+          email: groupInfo.email || "",
+          emails: groupInfo.emails || [],
           pedidos: 0,
           revenue: 0,
           unidades: 0,
@@ -107,16 +108,14 @@ export default function Distribuidores({ orders = [] }) {
       distMap[key].orders.push(o);
     });
 
-    // Calcular tier y tipo (nuevo vs frecuente)
     return Object.values(distMap).map(d => {
       const tier = getTier(d.revenue);
-      // Es NUEVO si su primera compra registrada en todo el historial es en este mes
       const isNew = d.firstPurchaseMonth === mes;
       return { ...d, tier, isNew };
     }).sort((a, b) => b.revenue - a.revenue);
-  }, [processed, mes]);
+  }, [processed, mes, orderKeyMap, groups, firstPurchaseMonth]);
 
-  // ─── KPIs del período ──────────────────────────────────────────────────────
+  // ─── KPIs ─────────────────────────────────────────────────────────────────
   const kpis = useMemo(() => {
     const total = distData.length;
     const nuevos = distData.filter(d => d.isNew).length;
@@ -129,26 +128,19 @@ export default function Distribuidores({ orders = [] }) {
     return { total, nuevos, frecuentes, revenueNuevos, revenueFrecuentes, totalRevenue, byTier };
   }, [distData]);
 
-  // ─── Tendencia mensual de distribuidores (nuevo vs recurrente) ────────────
+  // ─── Tendencia mensual ────────────────────────────────────────────────────
   const trendData = useMemo(() => {
     const byMonth = {};
-    const firstPurchase = {};
-    processed.forEach(o => {
-      const key = o.cliente?.trim();
-      if (!key) return;
-      if (!firstPurchase[key] || o.month < firstPurchase[key]) firstPurchase[key] = o.month;
-    });
-
     allMonths.slice().reverse().forEach(m => {
       const inM = processed.filter(o => o.month === m);
-      const clients = [...new Set(inM.map(o => o.cliente?.trim()).filter(Boolean))];
-      const nuevos = clients.filter(c => firstPurchase[c] === m).length;
-      const frecuentes = clients.filter(c => firstPurchase[c] !== m).length;
+      const clientKeys = [...new Set(inM.map(o => orderKeyMap[o.id]).filter(Boolean))];
+      const nuevos = clientKeys.filter(k => firstPurchaseMonth[k] === m).length;
+      const frecuentes = clientKeys.filter(k => firstPurchaseMonth[k] !== m).length;
       const revenue = inM.reduce((s, o) => s + (o.totalPagar || 0), 0);
-      byMonth[m] = { mes: m, label: m.slice(5) + "/" + m.slice(2, 4), nuevos, frecuentes, total: clients.length, revenue };
+      byMonth[m] = { mes: m, label: m.slice(5) + "/" + m.slice(2, 4), nuevos, frecuentes, total: clientKeys.length, revenue };
     });
     return Object.values(byMonth).slice(-8);
-  }, [processed, allMonths]);
+  }, [processed, allMonths, orderKeyMap, firstPurchaseMonth]);
 
   // ─── Filtrar por tier ─────────────────────────────────────────────────────
   const filtered = useMemo(() => {
@@ -159,7 +151,7 @@ export default function Distribuidores({ orders = [] }) {
   const newDist = filtered.filter(d => d.isNew);
   const frecDist = filtered.filter(d => !d.isNew);
 
-  // ─── Componentes locales ──────────────────────────────────────────────────
+  // ─── Subcomponentes ───────────────────────────────────────────────────────
   const KPI = ({ icon, label, value, sub, color = "#52B788" }) => (
     <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 12, padding: "14px 16px", flex: 1, minWidth: 120 }}>
       <div style={{ fontSize: 10, color: "#5A8A66", fontWeight: 700, letterSpacing: 1, marginBottom: 5, display: "flex", alignItems: "center", gap: 5 }}>
@@ -210,15 +202,15 @@ export default function Distribuidores({ orders = [] }) {
           <tbody>
             {dists.map((d, i) => (
               <tr
-                key={d.nombre}
-                onClick={() => setSelectedDist(selectedDist?.nombre === d.nombre ? null : d)}
+                key={d._key}
+                onClick={() => setSelectedDist(selectedDist?._key === d._key ? null : d)}
                 style={{
                   borderBottom: "1px solid #111E14",
-                  background: selectedDist?.nombre === d.nombre ? "#0F2A18" : "transparent",
+                  background: selectedDist?._key === d._key ? "#0F2A18" : "transparent",
                   cursor: "pointer", transition: "background .1s",
                 }}
-                onMouseEnter={e => { if (selectedDist?.nombre !== d.nombre) e.currentTarget.style.background = "#0D1F14"; }}
-                onMouseLeave={e => { if (selectedDist?.nombre !== d.nombre) e.currentTarget.style.background = "transparent"; }}
+                onMouseEnter={e => { if (selectedDist?._key !== d._key) e.currentTarget.style.background = "#0D1F14"; }}
+                onMouseLeave={e => { if (selectedDist?._key !== d._key) e.currentTarget.style.background = "transparent"; }}
               >
                 <td style={{ padding: "8px 10px", color: "#3A6A46", fontWeight: 700 }}>{i + 1}</td>
                 <td style={{ padding: "8px 10px", color: "#E8F5EE", fontWeight: 600 }}>{d.nombre}</td>
@@ -237,8 +229,9 @@ export default function Distribuidores({ orders = [] }) {
   // ─── Vista detalle distribuidor ───────────────────────────────────────────
   if (selectedDist) {
     const d = selectedDist;
-    const monthlyHistory = useMemo ? null : null; // se calcula abajo
-    const distHistory = processed.filter(o => o.cliente?.trim() === d.nombre);
+    // Historial completo: pedidos del período actual del distribuidor + total histórico desde groups
+    const distHistory = processed.filter(o => orderKeyMap[o.id] === d._key);
+    const totalHistorico = groups[d._key]?.orderIds?.length ?? distHistory.length;
     const histByMonth = {};
     distHistory.forEach(o => {
       if (!histByMonth[o.month]) histByMonth[o.month] = { mes: o.month, label: o.month.slice(5) + "/" + o.month.slice(2, 4), revenue: 0, pedidos: 0 };
@@ -246,9 +239,6 @@ export default function Distribuidores({ orders = [] }) {
       histByMonth[o.month].pedidos += 1;
     });
     const histChartData = Object.values(histByMonth).sort((a, b) => a.mes.localeCompare(b.mes));
-
-    // Tier histórico por mes
-    const tierHistory = histChartData.map(m => ({ ...m, tier: getTier(m.revenue).label }));
 
     return (
       <div>
@@ -268,8 +258,30 @@ export default function Distribuidores({ orders = [] }) {
           <KPI icon="📦" label="Pedidos" value={d.pedidos} sub={`en ${mes}`} color="#7EC8A4" />
           <KPI icon="📊" label="Unidades" value={N(d.unidades)} sub={`en ${mes}`} color="#5A8A66" />
           <KPI icon="📅" label="1er Compra" value={d.firstPurchaseMonth} color="#F0B429" />
-          <KPI icon="🗂" label="Total Pedidos" value={distHistory.length} sub="histórico" color="#9B59B6" />
+          <KPI icon="🗂" label="Total Pedidos" value={totalHistorico} sub="histórico" color="#9B59B6" />
         </div>
+
+        {/* Info de contacto — todos los datos registrados del cliente */}
+        {(d.telefonos?.length > 0 || d.emails?.length > 0 || d.nombres?.length > 1) && (
+          <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 10, padding: "10px 14px", marginBottom: 14, fontSize: 12 }}>
+            {d.nombres?.length > 1 && (
+              <div style={{ marginBottom: 6, color: "#5A8A66" }}>
+                <span style={{ color: "#3A6A46", marginRight: 6 }}>También registrado como:</span>
+                {d.nombres.slice(0, -1).map((n, i) => (
+                  <span key={i} style={{ color: "#7EC8A4", marginRight: 10 }}>{n}</span>
+                ))}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+              {d.telefonos?.map((t, i) => (
+                <span key={i} style={{ color: "#7EC8A4" }}>📞 {t}</span>
+              ))}
+              {d.emails?.map((m, i) => (
+                <span key={i} style={{ color: "#7EC8A4" }}>✉ {m}</span>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
           <Chart title="Revenue Mensual">
@@ -454,7 +466,6 @@ export default function Distribuidores({ orders = [] }) {
 
       {/* Tablas nuevo vs frecuente */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        {/* NUEVOS */}
         <div style={{ background: "#0D1F12", border: "1px solid #1A5A2A", borderRadius: 12, padding: "14px 16px" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#52B788", letterSpacing: 1, marginBottom: 2 }}>
             ✦ DISTRIBUIDORES NUEVOS — {mes}
@@ -464,8 +475,6 @@ export default function Distribuidores({ orders = [] }) {
           </div>
           <DistTable dists={newDist} emptyMsg="No hay distribuidores nuevos en este período" accentColor="#52B788" />
         </div>
-
-        {/* FRECUENTES */}
         <div style={{ background: "#0D1F12", border: "1px solid #7A5000", borderRadius: 12, padding: "14px 16px" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#F0B429", letterSpacing: 1, marginBottom: 2 }}>
             ⟳ DISTRIBUIDORES FRECUENTES — {mes}
