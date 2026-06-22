@@ -1,29 +1,37 @@
 // components/Setup.jsx
 import { useState } from "react";
-import { $, P, REGIONS, VENDORS, PRODUCTS as INITIAL_PRODUCTS } from "../lib/constants";
+import { $, P, REGIONS, VENDORS, PRODUCTS as FALLBACK_PRODUCTS } from "../lib/constants";
 
 const inpStyle = { background: "#0A1A0C", border: "1px solid #1A3520", color: "#90CBF9", padding: "9px 12px", borderRadius: 8, fontSize: 13, width: "100%", boxSizing: "border-box" };
 const card = { background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 12, padding: "18px 20px", marginBottom: 14 };
 
-export default function Setup({ regions: propRegions, setRegions: propSetRegions, onSaveRegions, notify }) {
+export default function Setup({
+  regions: propRegions, setRegions: propSetRegions, onSaveRegions,
+  products: propProducts, setProducts: propSetProducts, onSaveProducts,
+  notify
+}) {
   const [sub, setSub] = useState("productos");
-  const [prods, setProds] = useState(INITIAL_PRODUCTS);
   const [newP, setNewP] = useState({ name: "", precio: "", costo: "" });
   const [isSaving, setIsSaving] = useState(false);
-  // Usar regiones desde props (ya vienen del hook global)
+
+  // Productos desde el hook global (ya vienen cargados desde la API)
+  const prods = propProducts?.length ? propProducts : FALLBACK_PRODUCTS;
+  const setProds = propSetProducts ?? (() => {});
+
+  // Regiones desde el hook global
   const regions = propRegions ?? REGIONS;
   const setRegions = propSetRegions ?? (() => {});
   const [isSavingRegions, setIsSavingRegions] = useState(false);
   const [regionsSaved, setRegionsSaved] = useState(false);
 
   const updProd = (id, field, val) => {
-    setProds(prev => prev.map(p => 
+    setProds(prev => prev.map(p =>
       p.id === id ? { ...p, [field]: field === "name" ? val : +val || 0 } : p
     ));
   };
 
   const toggleP = (id) => {
-    setProds(prev => prev.map(p => 
+    setProds(prev => prev.map(p =>
       p.id === id ? { ...p, active: !p.active } : p
     ));
   };
@@ -32,8 +40,7 @@ export default function Setup({ regions: propRegions, setRegions: propSetRegions
     if (!newP.name.trim()) return;
     const nextNum = prods.length + 1;
     const id = `FBS-SKU-${String(nextNum).padStart(3, "0")}`;
-    
-    setProds(prev => [...prev, { id, ...newP, active: true }]);
+    setProds(prev => [...prev, { id, name: newP.name, precio: +newP.precio || 0, costo: +newP.costo || 0, active: true }]);
     setNewP({ name: "", precio: "", costo: "" });
   };
 
@@ -46,9 +53,7 @@ export default function Setup({ regions: propRegions, setRegions: propSetRegions
     setIsSavingRegions(true);
     setRegionsSaved(false);
     try {
-      if (onSaveRegions) {
-        await onSaveRegions(regions);
-      }
+      if (onSaveRegions) await onSaveRegions(regions);
       setRegionsSaved(true);
       setTimeout(() => setRegionsSaved(false), 3000);
     } catch (err) {
@@ -58,27 +63,31 @@ export default function Setup({ regions: propRegions, setRegions: propSetRegions
     }
   };
 
-  // Función para manejar el guardado general de los precios
-  const handleSave = () => {
+  // Guardar productos via hook global → API → Google Sheets
+  const handleSave = async () => {
     setIsSaving(true);
-    // Aquí puedes conectar en el futuro con un fetch() a tu API para actualizar la base de datos
-    setTimeout(() => {
-      alert("✅ Cambios guardados en la sesión actual.\n\nNota: Para que este cambio se mantenga tras refrescar la página, se debe conectar este botón a una ruta de backend (API).");
+    try {
+      if (onSaveProducts) {
+        await onSaveProducts(prods);
+      }
+    } catch (err) {
+      console.error("[Setup] handleSave:", err);
+      if (notify) notify(`❌ Error al guardar: ${err.message}`, "err");
+    } finally {
       setIsSaving(false);
-    }, 800);
+    }
   };
 
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
         <div style={{ fontSize: 22, fontWeight: 800 }}>Parámetros del Sistema</div>
-        
-        {/* Botón de Guardar Cambios en la cabecera */}
+
         {sub === "productos" && (
           <button onClick={handleSave} disabled={isSaving} style={{
-            background: isSaving ? "#4A7A56" : "#4A7A56", color: "#0A1A0C", border: "none",
-            borderRadius: 8, padding: "10px 18px", cursor: isSaving ? "wait" : "pointer", 
-            fontSize: 14, fontWeight: 800, transition: "0.2s"
+            background: "#4A7A56", color: "#0A1A0C", border: "none",
+            borderRadius: 8, padding: "10px 18px", cursor: isSaving ? "wait" : "pointer",
+            fontSize: 14, fontWeight: 800, transition: "0.2s", opacity: isSaving ? 0.7 : 1
           }}>
             {isSaving ? "Guardando..." : "Guardar Cambios"}
           </button>
@@ -89,7 +98,7 @@ export default function Setup({ regions: propRegions, setRegions: propSetRegions
         {[["productos", "📦 Productos & SKUs"], ["regiones", "🌎 Regiones"], ["vendedores", "👤 Vendedores"]].map(([id, lbl]) => (
           <button key={id} onClick={() => setSub(id)} style={{
             background: sub === id ? "#1A5E2A" : "transparent",
-            color: sub === id ? "#fff" : "#5A8A66", 
+            color: sub === id ? "#fff" : "#5A8A66",
             border: `1px solid ${sub === id ? "#2D7A3A" : "#1A3520"}`,
             borderRadius: 8, padding: "8px 16px", cursor: "pointer", fontSize: 13, fontWeight: 600
           }}>
@@ -101,13 +110,13 @@ export default function Setup({ regions: propRegions, setRegions: propSetRegions
       {sub === "productos" && (
         <div style={card}>
           <div style={{ fontSize: 10, fontWeight: 700, color: "#52B788", letterSpacing: 1, marginBottom: 14 }}>CATÁLOGO DE PRODUCTOS</div>
-          
+
           <div style={{ display: "grid", gridTemplateColumns: "80px 2fr 120px 120px 70px 55px", gap: 8, marginBottom: 8 }}>
             {["SKU", "Nombre", "Precio B2B", "Costo Neto", "Margen", "Activo"].map(h => (
               <div key={h} style={{ fontSize: 9, fontWeight: 700, color: "#3A6A46", letterSpacing: 1 }}>{h.toUpperCase()}</div>
             ))}
           </div>
-          
+
           <div style={{ maxHeight: 420, overflowY: "auto" }}>
             {prods.map((p) => {
               const mg = p.precio ? (p.precio - p.costo) / p.precio : 0;
@@ -117,22 +126,22 @@ export default function Setup({ regions: propRegions, setRegions: propSetRegions
                   gap: 8, padding: "5px 0", borderBottom: "1px solid #0D1A0F", opacity: p.active ? 1 : 0.4
                 }}>
                   <div style={{ fontSize: 10, color: "#F0B429", fontFamily: "monospace", display: "flex", alignItems: "center" }}>{p.id}</div>
-                  <input 
-                    value={p.name} 
+                  <input
+                    value={p.name}
                     onChange={e => updProd(p.id, "name", e.target.value)}
-                    style={{ ...inpStyle, padding: "5px 8px", fontSize: 11 }} 
+                    style={{ ...inpStyle, padding: "5px 8px", fontSize: 11 }}
                   />
-                  <input 
-                    type="number" 
-                    value={p.precio} 
+                  <input
+                    type="number"
+                    value={p.precio}
                     onChange={e => updProd(p.id, "precio", e.target.value)}
-                    style={{ ...inpStyle, padding: "5px 8px", fontSize: 11 }} 
+                    style={{ ...inpStyle, padding: "5px 8px", fontSize: 11 }}
                   />
-                  <input 
-                    type="number" 
-                    value={p.costo} 
+                  <input
+                    type="number"
+                    value={p.costo}
                     onChange={e => updProd(p.id, "costo", e.target.value)}
-                    style={{ ...inpStyle, padding: "5px 8px", fontSize: 11 }} 
+                    style={{ ...inpStyle, padding: "5px 8px", fontSize: 11 }}
                   />
                   <div style={{ fontSize: 11, fontWeight: 700, color: mg >= 0.55 ? "#52B788" : "#F0B429", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     {P(mg)}
@@ -140,7 +149,7 @@ export default function Setup({ regions: propRegions, setRegions: propSetRegions
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <button onClick={() => toggleP(p.id)} style={{
                       background: p.active ? "#1A5E2A" : "transparent",
-                      border: `1px solid ${p.active ? "#2D7A3A" : "#1A3520"}`, 
+                      border: `1px solid ${p.active ? "#2D7A3A" : "#1A3520"}`,
                       color: p.active ? "#fff" : "#3A6A46",
                       borderRadius: 6, padding: "3px 8px", cursor: "pointer", fontSize: 10
                     }}>
@@ -156,25 +165,25 @@ export default function Setup({ regions: propRegions, setRegions: propSetRegions
           <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid #1A3520" }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: "#52B788", letterSpacing: 1, marginBottom: 10 }}>AGREGAR PRODUCTO</div>
             <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr auto", gap: 10 }}>
-              <input 
-                value={newP.name} 
+              <input
+                value={newP.name}
                 onChange={e => setNewP(p => ({ ...p, name: e.target.value }))}
-                placeholder="Nombre del producto" 
-                style={inpStyle} 
+                placeholder="Nombre del producto"
+                style={inpStyle}
               />
-              <input 
-                type="number" 
-                value={newP.precio} 
+              <input
+                type="number"
+                value={newP.precio}
                 onChange={e => setNewP(p => ({ ...p, precio: +e.target.value }))}
-                placeholder="Precio B2B" 
-                style={inpStyle} 
+                placeholder="Precio B2B"
+                style={inpStyle}
               />
-              <input 
-                type="number" 
-                value={newP.costo} 
+              <input
+                type="number"
+                value={newP.costo}
                 onChange={e => setNewP(p => ({ ...p, costo: +e.target.value }))}
-                placeholder="Costo neto" 
-                style={inpStyle} 
+                placeholder="Costo neto"
+                style={inpStyle}
               />
               <button onClick={addP} style={{
                 background: "#1A5E2A", color: "#fff", border: "none",

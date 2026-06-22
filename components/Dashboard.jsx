@@ -2,7 +2,7 @@
 import { useState, useMemo } from "react";
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
          XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { $, N, P, PIE_COLORS, PRODUCTS } from "../lib/constants";
+import { $, N, P, PIE_COLORS, PRODUCTS as FALLBACK_PRODUCTS } from "../lib/constants";
 
 const selStyle = { background: "#0D1F12", border: "1px solid #1A3520", color: "#E8F5EE", padding: "8px 12px", borderRadius: 8, fontSize: 13, cursor: "pointer" };
 
@@ -21,7 +21,8 @@ const parseDate = (fechaRaw) => {
   return { month: str.slice(0, 7), day: "01" };
 };
 
-export default function Dashboard({ orders = [], syncing = false }) {
+export default function Dashboard({ orders = [], syncing = false, products: propProducts }) {
+  const PRODUCTS = propProducts?.length ? propProducts : FALLBACK_PRODUCTS;
 
   const processedOrders = useMemo(() => {
     return orders.map(o => {

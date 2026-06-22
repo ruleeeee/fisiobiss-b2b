@@ -3,6 +3,7 @@ import { C } from "../lib/constants";
 import { useState } from "react";
 import { useOrders } from "../hooks/useFirestore";
 import { useRegions } from "../hooks/useRegions";
+import { useProducts } from "../hooks/useProducts";
 import { addOrder, updateOrderStatus, deleteOrder } from "../lib/db";
  
 // Componentes
@@ -28,6 +29,9 @@ export default function Home() {
 
   // ── Regiones / costos de envío ────────────────
   const { regions, setRegions, updateRegions } = useRegions();
+
+  // ── Productos / catálogo con precios ─────────
+  const { products, setProducts, updateProducts } = useProducts();
  
   // ── Handlers ─────────────────────────────────
   const notify = (msg, type = "ok") => {
@@ -74,8 +78,15 @@ export default function Home() {
       await updateRegions(newRegions);
       notify("✅ Costos de envío guardados en Google Sheets");
     } catch (err) {
-      // El estado local ya se actualizó en updateRegions.
-      // Solo avisamos que la persistencia falló, sin bloquear el flujo.
+      notify("⚠️ Cambios aplicados en sesión (error al guardar en Sheet)", "warn");
+    }
+  };
+
+  const handleSaveProducts = async (newProducts) => {
+    try {
+      await updateProducts(newProducts);
+      notify("✅ Productos guardados en Google Sheets");
+    } catch (err) {
       notify("⚠️ Cambios aplicados en sesión (error al guardar en Sheet)", "warn");
     }
   };
@@ -109,7 +120,7 @@ export default function Home() {
         onRefresh={refresh}
       >
         {view === "dashboard"    && (
-          <Dashboard orders={orders} syncing={syncing}/>
+          <Dashboard orders={orders} syncing={syncing} products={products}/>
         )}
         {view === "nuevo"        && (
           <NuevoPedido
@@ -118,6 +129,7 @@ export default function Home() {
             notify={notify}
             setView={setView}
             regions={regions}
+            products={products}
           />
         )}
         {view === "pedidos"      && (
@@ -129,7 +141,7 @@ export default function Home() {
           />
         )}
         {view === "distribuidores" && <Distribuidores orders={orders} />}
-        {view === "rentabilidad" && <Rentabilidad orders={orders}/>}
+        {view === "rentabilidad" && <Rentabilidad orders={orders} products={products}/>}
         {view === "setup"        && (
           <Setup
             onSeed={refresh}
@@ -137,6 +149,9 @@ export default function Home() {
             regions={regions}
             setRegions={setRegions}
             onSaveRegions={handleSaveRegions}
+            products={products}
+            setProducts={setProducts}
+            onSaveProducts={handleSaveProducts}
           />
         )}
       </AppShell>

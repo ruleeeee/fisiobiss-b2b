@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { $, N, P, today, PRODUCTS, REGIONS as FALLBACK_REGIONS, VENDORS, ESTADOS, PAGOS } from "../lib/constants";
+import { $, N, P, today, PRODUCTS as FALLBACK_PRODUCTS, REGIONS as FALLBACK_REGIONS, VENDORS, ESTADOS, PAGOS } from "../lib/constants";
  
 const inpStyle={background:"#0A1A0C",border:"1px solid #1A3520",color:"#90CBF9",padding:"9px 12px",borderRadius:8,fontSize:13,width:"100%",boxSizing:"border-box"};
 const labelSt={fontSize:10,color:"#5A8A66",fontWeight:700,letterSpacing:1,marginBottom:4,display:"block"};
@@ -8,8 +8,9 @@ const card={background:"#0D1F12",border:"1px solid #1A3520",borderRadius:12,padd
 // Field definido FUERA del componente para evitar remount en cada render
 const Field=({label,children})=><div><label style={labelSt}>{label}</label>{children}</div>;
  
-export default function NuevoPedido({ nextId, addOrder, notify, setView, regions: propRegions }) {
+export default function NuevoPedido({ nextId, addOrder, notify, setView, regions: propRegions, products: propProducts }) {
   const REGIONS = propRegions?.length ? propRegions : FALLBACK_REGIONS;
+  const PRODUCTS = propProducts?.length ? propProducts : FALLBACK_PRODUCTS;
   const prods = PRODUCTS.filter(p=>p.active);
   const emptyItems = ()=>prods.map(p=>({...p,qty:0,regalo:0}));
  

@@ -1,6 +1,6 @@
 // components/Rentabilidad.jsx
 import { useState, useMemo } from "react";
-import { $, N, P, PRODUCTS } from "../lib/constants"; 
+import { $, N, P, PRODUCTS as FALLBACK_PRODUCTS } from "../lib/constants";
 
 const selStyle={background:"#0D1F12",border:"1px solid #1A3520",color:"#E8F5EE",padding:"8px 12px",borderRadius:8,fontSize:13,cursor:"pointer"};
 const inpStyle={background:"#0A1A0C",border:"1px solid #1A3520",color:"#90CBF9",padding:"9px 12px",borderRadius:8,fontSize:13,width:"100%",boxSizing:"border-box"};
@@ -22,7 +22,8 @@ const parseDate = (fechaRaw) => {
   return { month: str.slice(0, 7), day: "01" };
 };
 
-export default function Rentabilidad({ orders: allOrders }){
+export default function Rentabilidad({ orders: allOrders, products: propProducts }){
+  const PRODUCTS = propProducts?.length ? propProducts : FALLBACK_PRODUCTS;
   
   const processedOrders = useMemo(() => {
     return allOrders.map(o => {
