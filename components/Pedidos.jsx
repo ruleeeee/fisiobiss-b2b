@@ -166,13 +166,18 @@ export default function Pedidos({ orders, updateStatus, deleteOrder, notify }) {
 }
  
 function OrderDetail({order,onClose,onUpdateEst}){
-  // Recalcular en tiempo real desde los items actuales
-  // (cubre el caso de ediciones de cantidad hechas directamente en el sheet)
+  // El total de la lista es TOTAL A PAGAR (incluye descuento o total manual).
+  // Las líneas se valoran al precio de catálogo; si no cierran con ese total,
+  // la diferencia se muestra aparte para que ambos montos coincidan.
   const liveItems    = (order.items||[]).filter(it=>it.qty>0);
-  const subtotal     = liveItems.reduce((s,it)=>s+it.qty*it.precio, 0);
+  const lineSubtotal = liveItems.reduce((s,it)=>s+it.qty*it.precio, 0);
   const costoEnvio   = order.costoEnvio||0;
-  const totalPagar   = subtotal + costoEnvio;
-  const totalUnids   = liveItems.reduce((s,it)=>s+it.qty+(it.regalo||0), 0);
+  const calculado    = lineSubtotal + costoEnvio;
+  const totalPagar   = order.totalPagar > 0 ? order.totalPagar : calculado;
+  const ajuste       = Math.round(calculado - totalPagar);
+  const pct          = lineSubtotal ? Math.round((ajuste / lineSubtotal) * 100) : 0;
+  const esDescuento  = ajuste > 1 && lineSubtotal > 0
+    && Math.abs(ajuste - Math.round(lineSubtotal * pct / 100)) <= 1;
   const cogs         = liveItems.reduce((s,it)=>s+it.qty*(it.costo||0), 0);
   const gp           = totalPagar/1.19 - cogs;
   const mg           = totalPagar ? gp/(totalPagar/1.19) : 0;
@@ -219,6 +224,12 @@ function OrderDetail({order,onClose,onUpdateEst}){
               <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:5,color:"#3A6A46"}}>
                 <span>Envío</span><span>{$(costoEnvio)}</span>
               </div>
+              {Math.abs(ajuste) > 1 && (
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:5,color:"#F0B429"}}>
+                  <span>{esDescuento ? `Descuento ${pct}%` : "Ajuste"}</span>
+                  <span>{$(-ajuste)}</span>
+                </div>
+              )}
               <div style={{display:"flex",justifyContent:"space-between",fontSize:18,fontWeight:800}}>
                 <span>Total</span><span style={{color:"#52B788"}}>{$(totalPagar)}</span>
               </div>
