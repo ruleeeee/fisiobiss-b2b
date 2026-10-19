@@ -196,6 +196,15 @@ function OrderDetail({order,onClose,onUpdateEst}){
               <div style={{fontSize:13,color:"#E8F5EE",marginTop:2}}>{v}</div>
             </div>
           ):null)}
+          {order.comprobante ? (
+            <div style={{marginTop:10}}>
+              <div style={{fontSize:9,color:"#3A6A46",letterSpacing:1,fontWeight:700}}>COMPROBANTE</div>
+              <a href={order.comprobante} target="_blank" rel="noreferrer"
+                style={{fontSize:13,color:"#F0B429",marginTop:2,display:"inline-block"}}>
+                Ver comprobante
+              </a>
+            </div>
+          ) : null}
         </div>
         <div>
           <div style={card}>

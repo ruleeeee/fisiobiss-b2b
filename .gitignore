@@ -4,6 +4,11 @@ out/
 .env
 .env.local
 env.local
+service-account.json
+sheet-id.txt
+oauth-client.json
+abrir-drive.html
+scripts/ComprobantesDrive.local.gs
 *.log
 .DS_Store
 .wrangler/

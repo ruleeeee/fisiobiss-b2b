@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "build:cf": "opennextjs-cloudflare build",
-    "preview:cf": "opennextjs-cloudflare preview"
+    "preview:cf": "opennextjs-cloudflare preview",
+    "env:local": "node scripts/setup-local-env.mjs",
+    "drive:auth": "node scripts/drive-auth.mjs"
   },
   "dependencies": {
     "google-auth-library": "^9.14.2",

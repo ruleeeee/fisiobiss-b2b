@@ -1,6 +1,6 @@
 "use client";
 import { C } from "../lib/constants";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useOrders } from "../hooks/useFirestore";
 import { useRegions } from "../hooks/useRegions";
 import { useProducts } from "../hooks/useProducts";
@@ -39,15 +39,25 @@ export default function Home() {
     setTimeout(() => setToast(null), 3200);
   };
  
-  const handleAddOrder = async (order) => {
+  useEffect(() => {
+    if (view === "nuevo") refresh();
+  }, [view]);
+
+  const handleAddOrder = async (order, file) => {
     try {
-      addLocalOrder(order);
-      await addOrder(order);
+      const saved = await addOrder(order, file);
+      addLocalOrder({ ...order, id: saved.id, comprobante: saved.comprobante || "" });
       await refresh();
-      notify(`✅ ${order.id} guardado en Google Sheets`);
+      if (saved.comprobanteError) {
+        notify(`✅ ${saved.id} guardado. El comprobante no se subió: ${saved.comprobanteError}`, "err");
+      } else {
+        notify(`✅ ${saved.id} guardado en Google Sheets`);
+      }
+      return saved;
     } catch (err) {
       notify("❌ Error al guardar: " + err.message, "err");
       refresh();
+      throw err;
     }
   };
  

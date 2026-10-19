@@ -20,9 +20,11 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
     estado:"Pendiente",medioPago:"Transferencia",notas:""
   });
   const [search, setSearch] = useState("");
+  const [onlySelected, setOnlySelected] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [descuentoPct, setDescuentoPct] = useState("");
   const [totalManual, setTotalManual] = useState("");
+  const [file, setFile] = useState(null);
  
   // MANEJADOR DE CAMBIOS OPTIMIZADO: No causa re-render innecesario de todo el componente
   const handleInputChange = (e) => {
@@ -46,7 +48,12 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
   const margin=total?gross/(total/1.19):0;
   const orderId=`PED-${String(nextId).padStart(3,"0")}`;
  
-  const filteredProds=f.items.filter(it=>!search||it.name.toLowerCase().includes(search.toLowerCase()));
+  const selectedCount = f.items.filter(it => it.qty > 0 || it.regalo > 0).length;
+  const filteredProds=f.items.filter(it=>{
+    const matchesSearch=!search||it.name.toLowerCase().includes(search.toLowerCase());
+    const matchesSelected=!onlySelected||it.qty>0||it.regalo>0;
+    return matchesSearch && matchesSelected;
+  });
  
   const guardar = async () => {
     if(!f.cliente.trim()){notify("Cliente es obligatorio","err");return;}
@@ -56,15 +63,16 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
     const order={...f, id:orderId, subtotal, costoEnvio:envio, descuento:descuentoVal, totalPagar:total, totalUnidades:totalUds, cogs };
     
     try {
-      await addOrder(order);
-      notify(`Pedido ${orderId} guardado ✓`);
+      await addOrder(order, file);
       setF({fecha:today(),vendedor:"Vicente",cliente:"",telefono:"",email:"",direccion:"",region:"Metropolitana (RM)",items:emptyItems(),estado:"Pendiente",medioPago:"Transferencia",notas:""});
       setSearch("");
+      setOnlySelected(false);
       setDescuentoPct("");
       setTotalManual("");
+      setFile(null);
       setView("pedidos");
-    } catch(err) {
-      notify("Error guardando el pedido","err");
+    } catch {
+      // El aviso de error lo muestra quien llama a addOrder.
     } finally {
       setIsSaving(false);
     }
@@ -107,8 +115,16 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
       <div style={card}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
           <div style={{fontSize:10,fontWeight:700,color:"#52B788",letterSpacing:1}}>PRODUCTOS</div>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Filtrar producto..."
-            style={{...inpStyle,width:200,padding:"6px 10px",fontSize:12}}/>
+          <div style={{display:"flex",gap:8,alignItems:"center"}}>
+            <button type="button" onClick={()=>setOnlySelected(v=>!v)}
+              style={{background:onlySelected?"#1A5E2A":"#0A1A0C",border:"1px solid #2D5A3A",
+                color:onlySelected?"#fff":"#7EC8A4",borderRadius:8,padding:"6px 10px",fontSize:12,
+                fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>
+              Seleccionados{selectedCount?` (${selectedCount})`:""}
+            </button>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Filtrar producto..."
+              style={{...inpStyle,width:200,padding:"6px 10px",fontSize:12}}/>
+          </div>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 90px 80px 70px 90px",gap:8,padding:"0 4px 6px",borderBottom:"1px solid #1A3520",marginBottom:4}}>
           {["Producto","Precio","Cantidad","Regalo","Subtotal"].map(h=>(
@@ -116,6 +132,11 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
           ))}
         </div>
         <div style={{maxHeight:340,overflowY:"auto"}}>
+          {filteredProds.length===0 && (
+            <div style={{padding:"18px 4px",fontSize:12,color:"#3A6A46"}}>
+              {onlySelected ? "Todavía no hay productos con cantidad." : "Ningún producto coincide."}
+            </div>
+          )}
           {filteredProds.map(it=>{
             const on=it.qty>0;
             return (
@@ -224,10 +245,19 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
               {PAGOS.map(p=><option key={p}>{p}</option>)}
             </select>
           </div>
-          <div>
+          <div style={{marginBottom:10}}>
             <label style={labelSt}>Notas</label>
             <textarea name="notas" value={f.notas} onChange={handleInputChange}
               style={{...inpStyle,height:52,resize:"none"}} placeholder="Observaciones..."/>
+          </div>
+          <div>
+            <label style={labelSt}>Comprobante</label>
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+              onChange={e=>setFile(e.target.files?.[0]||null)}
+              style={{...inpStyle,padding:"8px 10px",color:"#7EC8A4"}}/>
+            <div style={{fontSize:11,color:"#3A6A46",marginTop:4}}>
+              {file ? file.name : "PDF, JPG o PNG. Se guarda como Comprobante_" + orderId}
+            </div>
           </div>
         </div>
       </div>

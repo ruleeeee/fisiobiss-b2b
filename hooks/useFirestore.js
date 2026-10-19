@@ -53,12 +53,21 @@ export function useOrders() {
   /** Agrega un pedido localmente (optimistic update) */
   const addLocalOrder = (order) => {
     setOrders(prev => [...prev, order]);
-    setNextId(n => n + 1);
+    const n = parseInt(String(order?.id).match(/\d+/)?.[0] || "0", 10) || 0;
+    if (n > 0) setNextId(cur => Math.max(cur, n + 1));
   };
  
-  /** Elimina un pedido localmente (optimistic update) */
+  /** Elimina un pedido localmente y libera su número si era el último */
   const removeLocalOrder = (id) => {
-    setOrders(prev => prev.filter(o => o.id !== id));
+    setOrders(prev => {
+      const next = prev.filter(o => o.id !== id);
+      const max = next.reduce((m, o) => {
+        const n = parseInt(String(o.id).match(/\d+/)?.[0] || "0", 10) || 0;
+        return Math.max(m, n);
+      }, 0);
+      setNextId(max + 1);
+      return next;
+    });
   };
 
   return {
