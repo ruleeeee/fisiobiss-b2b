@@ -8,6 +8,7 @@ export default function AppShell({ children, view, setView, ordersCount, syncing
     {id:"nuevo",icon:"+",label:"Nuevo Pedido"},
     {id:"pedidos",icon:"≡",label:"Pedidos"},
     {id:"distribuidores",icon:"!",label:"Distribuidores"},
+    {id:"activos",icon:"⌖",label:"Distribuidores activos"},
     {id:"rentabilidad",icon:"$",label:"Rentabilidad"},
     {id:"setup",icon:"⚙",label:"Parámetros"},
   ];

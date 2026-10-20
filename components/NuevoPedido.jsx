@@ -4,6 +4,7 @@ import {
   PRODUCTS as FALLBACK_PRODUCTS, REGIONS as FALLBACK_REGIONS,
   VENDORS, PAGOS, PERFILES_DIST, ORIGENES_PEDIDO, CANALES_ADQUISICION,
 } from "../lib/constants";
+import { comunasForRegion } from "../lib/comunas";
 import QuotationView from "./QuotationView";
 
 const inpStyle={background:"#0A1A0C",border:"1px solid #1A3520",color:"#90CBF9",padding:"9px 12px",borderRadius:8,fontSize:13,width:"100%",boxSizing:"border-box"};
@@ -49,7 +50,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
 
   const blankForm = () => ({
     fecha:today(),vendedor:"Vicente",cliente:"",telefono:"",email:"",
-    direccion:"",region:"Metropolitana (RM)",items:emptyItems(),
+    direccion:"",region:"Metropolitana (RM)",comuna:"",items:emptyItems(),
     medioPago:"Transferencia",notas:"",
     perfilDistribuidor:"",origenPedido:"Lead nuevo",
     canalAdquisicion:"",nPedidoCliente:"",
@@ -67,7 +68,14 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setF(x => ({ ...x, [name]: value }));
+    setF(x => {
+      if (name === "region") {
+        const list = comunasForRegion(value);
+        const nextComuna = list.includes(x.comuna) ? x.comuna : "";
+        return { ...x, region: value, comuna: nextComuna };
+      }
+      return { ...x, [name]: value };
+    });
   };
 
   const setQty=(id,field,val)=>setF(x=>({...x,items:x.items.map(it=>it.id===id?{...it,[field]:Math.max(0,+val||0)}:it)}));
@@ -110,6 +118,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
         email: last.email || x.email,
         direccion: last.direccion || x.direccion,
         region: last.region || x.region,
+        comuna: last.comuna || x.comuna,
         perfilDistribuidor: last.perfilDistribuidor || x.perfilDistribuidor,
         origenPedido: "Cliente antiguo",
         canalAdquisicion: "",
@@ -254,9 +263,17 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
             </select>
           </Field>
         </div>
-        <div style={{marginTop:10}}>
-          <label style={labelSt}>Dirección</label>
-          <input name="direccion" value={f.direccion} onChange={handleInputChange} style={inpStyle} placeholder="Calle, número, depto., ciudad"/>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginTop:10}}>
+          <Field label="Comuna">
+            <select name="comuna" value={f.comuna} onChange={handleInputChange} style={inpStyle} disabled={!comunasForRegion(f.region).length}>
+              <option value="">{comunasForRegion(f.region).length ? "Seleccionar comuna..." : "No aplica"}</option>
+              {comunasForRegion(f.region).map(c=><option key={c}>{c}</option>)}
+            </select>
+          </Field>
+          <div>
+            <label style={labelSt}>Dirección</label>
+            <input name="direccion" value={f.direccion} onChange={handleInputChange} style={inpStyle} placeholder="Calle, número, depto., ciudad"/>
+          </div>
         </div>
       </div>
 

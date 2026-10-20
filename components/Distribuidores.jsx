@@ -1,10 +1,10 @@
 // components/Distribuidores.jsx
 import { useState, useMemo } from "react";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  BarChart, Bar, Line, ComposedChart, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell,
 } from "recharts";
-import { $, N, P, PIE_COLORS } from "../lib/constants";
+import { $, N, PERFILES_DIST, ORIGENES_PEDIDO, CANALES_ADQUISICION } from "../lib/constants";
 import { buildClientIndex } from "../lib/clientIdentity";
 
 // ─── Tier config ──────────────────────────────────────────────────────────────
@@ -25,6 +25,35 @@ function getTier(monthlySpend) {
 const selStyle = {
   background: "#0D1F12", border: "1px solid #1A3520", color: "#E8F5EE",
   padding: "8px 12px", borderRadius: 8, fontSize: 13, cursor: "pointer",
+};
+
+const SIN_DATO = "Sin dato";
+const PERFIL_KEYS = [...PERFILES_DIST, SIN_DATO];
+const ORIGEN_KEYS = [...ORIGENES_PEDIDO, SIN_DATO];
+const CANAL_KEYS = [...CANALES_ADQUISICION, SIN_DATO];
+const PERFIL_COLORS = {
+  "Distribuidor natural": "#52B788",
+  "Local": "#4A90D9",
+  "Profesional de la salud": "#9B59B6",
+  [SIN_DATO]: "#3A6A46",
+};
+const ORIGEN_COLORS = {
+  "Lead nuevo": "#52B788",
+  "Cliente antiguo": "#F0B429",
+  [SIN_DATO]: "#3A6A46",
+};
+const CANAL_COLORS = {
+  "Contacto Directo": "#52B788",
+  "Meta": "#4A90D9",
+  "TikTok": "#E87040",
+  "Landing page": "#9B59B6",
+  [SIN_DATO]: "#3A6A46",
+};
+
+const monthLabel = (m) => `${m.slice(5)}/${m.slice(2, 4)}`;
+const pickClass = (raw, allowed) => {
+  const s = String(raw || "").trim();
+  return allowed.includes(s) ? s : SIN_DATO;
 };
 
 const parseDate = (fechaRaw) => {
@@ -52,6 +81,8 @@ export default function Distribuidores({ orders = [] }) {
   const [mes, setMes] = useState(defaultMonth);
   const [selectedTier, setSelectedTier] = useState("todos");
   const [selectedDist, setSelectedDist] = useState(null);
+  const [classifMetric, setClassifMetric] = useState("pedidos");
+  const [classifFilter, setClassifFilter] = useState(null);
 
   // ─── Procesar pedidos: añadir mes/día ────────────────────────────────────
   const processed = useMemo(() =>
@@ -76,8 +107,21 @@ export default function Distribuidores({ orders = [] }) {
   }, [processed, orderKeyMap]);
 
   // ─── Distribuidores del período seleccionado ─────────────────────────────
+  const orderMatchesClassif = (o) => {
+    if (!classifFilter) return true;
+    if (classifFilter.dim === "perfil") return pickClass(o.perfilDistribuidor, PERFILES_DIST) === classifFilter.value;
+    if (classifFilter.dim === "origen") return pickClass(o.origenPedido, ORIGENES_PEDIDO) === classifFilter.value;
+    if (classifFilter.dim === "canal") return pickClass(o.origenPedido, ORIGENES_PEDIDO) === "Lead nuevo"
+      && pickClass(o.canalAdquisicion, CANALES_ADQUISICION) === classifFilter.value;
+    return true;
+  };
+
+  const toggleClassif = (dim, value) => {
+    setClassifFilter(prev => (prev?.dim === dim && prev.value === value ? null : { dim, value }));
+  };
+
   const distData = useMemo(() => {
-    const inPeriod = processed.filter(o => o.month === mes);
+    const inPeriod = processed.filter(o => o.month === mes && orderMatchesClassif(o));
 
     // Agrupar por clientKey
     const distMap = {};
@@ -113,7 +157,7 @@ export default function Distribuidores({ orders = [] }) {
       const isNew = d.firstPurchaseMonth === mes;
       return { ...d, tier, isNew };
     }).sort((a, b) => b.revenue - a.revenue);
-  }, [processed, mes, orderKeyMap, groups, firstPurchaseMonth]);
+  }, [processed, mes, orderKeyMap, groups, firstPurchaseMonth, classifFilter]);
 
   // ─── KPIs ─────────────────────────────────────────────────────────────────
   const kpis = useMemo(() => {
@@ -142,6 +186,63 @@ export default function Distribuidores({ orders = [] }) {
     return Object.values(byMonth).slice(-8);
   }, [processed, allMonths, orderKeyMap, firstPurchaseMonth]);
 
+  const classifCharts = useMemo(() => {
+    const months = allMonths.slice().reverse().slice(-8);
+    const addVal = (row, key, order) => {
+      row[key] = (row[key] || 0) + (classifMetric === "revenue" ? (order.totalPagar || 0) : 1);
+    };
+    const emptyRow = (m, keys) => {
+      const row = { mes: m, label: monthLabel(m) };
+      keys.forEach(k => { row[k] = 0; });
+      return row;
+    };
+    const scoped = processed.filter(orderMatchesClassif);
+    const withTotal = (row, keys) => {
+      row.total = keys.reduce((s, k) => s + (row[k] || 0), 0);
+      return row;
+    };
+    const perfilTrend = months.map(m => {
+      const row = emptyRow(m, PERFIL_KEYS);
+      scoped.filter(o => o.month === m).forEach(o => addVal(row, pickClass(o.perfilDistribuidor, PERFILES_DIST), o));
+      return withTotal(row, PERFIL_KEYS);
+    });
+    const origenTrend = months.map(m => {
+      const row = emptyRow(m, ORIGEN_KEYS);
+      scoped.filter(o => o.month === m).forEach(o => addVal(row, pickClass(o.origenPedido, ORIGENES_PEDIDO), o));
+      return withTotal(row, ORIGEN_KEYS);
+    });
+    const canalTrend = months.map(m => {
+      const row = emptyRow(m, CANAL_KEYS);
+      scoped.filter(o => o.month === m && pickClass(o.origenPedido, ORIGENES_PEDIDO) === "Lead nuevo")
+        .forEach(o => addVal(row, pickClass(o.canalAdquisicion, CANALES_ADQUISICION), o));
+      return withTotal(row, CANAL_KEYS);
+    });
+
+    const inMes = scoped.filter(o => o.month === mes);
+    const mix = (list, keyFn, keys) => keys.map(name => {
+      const group = list.filter(o => keyFn(o) === name);
+      return {
+        name,
+        pedidos: group.length,
+        revenue: group.reduce((s, o) => s + (o.totalPagar || 0), 0),
+        value: classifMetric === "revenue"
+          ? group.reduce((s, o) => s + (o.totalPagar || 0), 0)
+          : group.length,
+      };
+    });
+    const leadsMes = inMes.filter(o => pickClass(o.origenPedido, ORIGENES_PEDIDO) === "Lead nuevo");
+
+    return {
+      perfilTrend,
+      origenTrend,
+      canalTrend,
+      perfilMes: mix(inMes, o => pickClass(o.perfilDistribuidor, PERFILES_DIST), PERFIL_KEYS),
+      origenMes: mix(inMes, o => pickClass(o.origenPedido, ORIGENES_PEDIDO), ORIGEN_KEYS),
+      canalMes: mix(leadsMes, o => pickClass(o.canalAdquisicion, CANALES_ADQUISICION), CANAL_KEYS),
+      leadsCount: leadsMes.length,
+    };
+  }, [processed, allMonths, mes, classifMetric, classifFilter]);
+
   // ─── Filtrar por tier ─────────────────────────────────────────────────────
   const filtered = useMemo(() => {
     if (selectedTier === "todos") return distData;
@@ -169,12 +270,70 @@ export default function Distribuidores({ orders = [] }) {
     </div>
   );
 
+  const formatClassif = (v) => classifMetric === "revenue" ? $(v) : N(v);
+
   const TT = ({ active, payload, label }) => active && payload?.length ? (
     <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 8, padding: "8px 12px", fontSize: 12 }}>
       <div style={{ color: "#5A8A66", marginBottom: 4 }}>{label}</div>
       {payload.map((p, i) => <div key={i} style={{ color: p.color || "#52B788", fontWeight: 700 }}>{p.name}: {p.value}</div>)}
     </div>
   ) : null;
+
+  const ClassifTT = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    const items = payload.filter(p => p.dataKey !== "total" && p.value);
+    const tot = payload[0]?.payload?.total || items.reduce((s, p) => s + (p.value || 0), 0);
+    const title = (label && Number.isNaN(Number(label)) ? label : payload[0]?.payload?.name) || "";
+    return (
+      <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 8, padding: "8px 12px", fontSize: 12 }}>
+        <div style={{ color: "#5A8A66", marginBottom: 4 }}>{title}</div>
+        {items.map((p, i) => {
+          const pct = tot ? ((p.value / tot) * 100).toFixed(1) : "0.0";
+          return <div key={i} style={{ color: p.color || "#52B788", fontWeight: 700 }}>{p.name}: {formatClassif(p.value)} ({pct}%)</div>;
+        })}
+      </div>
+    );
+  };
+
+  const StackedMonthChart = ({ data, keys, colors, dim }) => (
+    <ResponsiveContainer width="100%" height={220}>
+      <ComposedChart data={data} onClick={(state) => {
+        const row = state?.activePayload?.[0]?.payload;
+        if (row?.mes) setMes(row.mes);
+      }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#1A3520" />
+        <XAxis dataKey="label" tick={{ fill: "#4A7A56", fontSize: 10 }} />
+        <YAxis tick={{ fill: "#4A7A56", fontSize: 10 }} tickFormatter={v => classifMetric === "revenue" ? $(v).replace("$", "") : v} allowDecimals={false} />
+        <Tooltip content={<ClassifTT />} />
+        <Legend iconSize={8} wrapperStyle={{ fontSize: 10, color: "#5A8A66" }} />
+        {keys.map(k => (
+          <Bar key={k} dataKey={k} stackId="a" fill={colors[k]} cursor="pointer"
+            radius={k === keys[keys.length - 1] ? [3, 3, 0, 0] : [0, 0, 0, 0]} name={k}
+            onClick={(row) => { if (row?.mes) setMes(row.mes); toggleClassif(dim, k); }} />
+        ))}
+        <Line type="monotone" dataKey="total" stroke="#E8F5EE" strokeWidth={2} dot={{ r: 3 }} name="Total" />
+      </ComposedChart>
+    </ResponsiveContainer>
+  );
+
+  const MonthMixChart = ({ data, colors, dim }) => {
+    const tot = data.reduce((s, d) => s + (d.value || 0), 0);
+    const withTot = data.map(d => ({ ...d, total: tot }));
+    return (
+    <ResponsiveContainer width="100%" height={190}>
+      <BarChart data={withTot} layout="vertical" margin={{ left: 8, right: 16 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#1A3520" />
+        <XAxis type="number" tick={{ fill: "#4A7A56", fontSize: 10 }} tickFormatter={v => classifMetric === "revenue" ? $(v).replace("$", "") : v} allowDecimals={false} />
+        <YAxis type="category" dataKey="name" width={118} tick={{ fill: "#7EC8A4", fontSize: 10 }} />
+        <Tooltip content={<ClassifTT />} />
+        <Bar dataKey="value" radius={[0, 4, 4, 0]} name={classifMetric === "revenue" ? "Revenue" : "Pedidos"} cursor="pointer"
+          onClick={(row) => row?.name && toggleClassif(dim, row.name)}>
+          {withTot.map((d, i) => <Cell key={i} fill={colors[d.name] || "#52B788"} opacity={!classifFilter || classifFilter.value === d.name ? 1 : 0.35} />)}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+    );
+  };
 
   const TierBadge = ({ tier, size = "sm" }) => (
     <span style={{
@@ -448,7 +607,10 @@ export default function Distribuidores({ orders = [] }) {
         <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 12, padding: "14px 16px" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#5A8A66", letterSpacing: 1, marginBottom: 10 }}>TENDENCIA — NUEVOS VS FRECUENTES</div>
           <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={trendData}>
+            <BarChart data={trendData} onClick={(state) => {
+              const row = state?.activePayload?.[0]?.payload;
+              if (row?.mes) setMes(row.mes);
+            }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1A3520" />
               <XAxis dataKey="label" tick={{ fill: "#4A7A56", fontSize: 10 }} />
               <YAxis tick={{ fill: "#4A7A56", fontSize: 10 }} allowDecimals={false} />
@@ -458,6 +620,73 @@ export default function Distribuidores({ orders = [] }) {
               <Bar dataKey="frecuentes" fill="#F0B429" radius={[3, 3, 0, 0]} name="Frecuentes" stackId="a" />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Clasificación comercial */}
+      <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 12, padding: "14px 16px", marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#5A8A66", letterSpacing: 1, flex: 1 }}>
+            CLASIFICACIÓN COMERCIAL — PERFIL, ORIGEN Y CANAL
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            {[["pedidos", "Pedidos"], ["revenue", "Revenue"]].map(([id, label]) => (
+              <button key={id} type="button" onClick={() => setClassifMetric(id)}
+                style={{
+                  background: classifMetric === id ? "#1A5E2A" : "transparent",
+                  color: classifMetric === id ? "#fff" : "#7EC8A4",
+                  border: "1px solid #2D5A3A", borderRadius: 7, padding: "5px 10px",
+                  fontSize: 11, fontWeight: 700, cursor: "pointer",
+                }}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{ fontSize: 12, color: "#7EC8A4", marginBottom: 8 }}>
+          Click en un mes para cambiar el período. Click en una categoría para filtrar tablas y gráficos.
+        </div>
+        {classifFilter && (
+          <div style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 11, background: "#1A5E2A", color: "#E8F5EE", borderRadius: 6, padding: "4px 8px" }}>
+              Filtro: {classifFilter.dim} · {classifFilter.value}
+            </span>
+            <button type="button" onClick={() => setClassifFilter(null)}
+              style={{ background: "transparent", border: "1px solid #3A6A46", color: "#7EC8A4", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontSize: 11 }}>
+              Quitar filtro
+            </button>
+          </div>
+        )}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14 }}>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#52B788", letterSpacing: 1, marginBottom: 6 }}>PERFIL DE DISTRIBUIDOR · ÚLTIMOS MESES</div>
+            <StackedMonthChart data={classifCharts.perfilTrend} keys={PERFIL_KEYS} colors={PERFIL_COLORS} dim="perfil" />
+          </div>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#52B788", letterSpacing: 1, marginBottom: 6 }}>ORIGEN DEL PEDIDO · ÚLTIMOS MESES</div>
+            <StackedMonthChart data={classifCharts.origenTrend} keys={ORIGEN_KEYS} colors={ORIGEN_COLORS} dim="origen" />
+          </div>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#52B788", letterSpacing: 1, marginBottom: 6 }}>CANAL DE ADQUISICIÓN · LEADS NUEVOS · ÚLTIMOS MESES</div>
+            <StackedMonthChart data={classifCharts.canalTrend} keys={CANAL_KEYS} colors={CANAL_COLORS} dim="canal" />
+          </div>
+        </div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: "#5A8A66", letterSpacing: 1, margin: "16px 0 8px" }}>
+          COMPOSICIÓN EN {mes} · {classifMetric === "revenue" ? "REVENUE" : "PEDIDOS"}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 10, color: "#7EC8A4", marginBottom: 4 }}>Perfil</div>
+            <MonthMixChart data={classifCharts.perfilMes} colors={PERFIL_COLORS} dim="perfil" />
+          </div>
+          <div>
+            <div style={{ fontSize: 10, color: "#7EC8A4", marginBottom: 4 }}>Origen</div>
+            <MonthMixChart data={classifCharts.origenMes} colors={ORIGEN_COLORS} dim="origen" />
+          </div>
+          <div>
+            <div style={{ fontSize: 10, color: "#7EC8A4", marginBottom: 4 }}>Canal {classifCharts.leadsCount ? `(${classifCharts.leadsCount} leads)` : "(sin leads)"}</div>
+            <MonthMixChart data={classifCharts.canalMes} colors={CANAL_COLORS} dim="canal" />
+          </div>
         </div>
       </div>
 

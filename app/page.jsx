@@ -12,6 +12,7 @@ import Dashboard   from "../components/Dashboard";
 import NuevoPedido from "../components/NuevoPedido";
 import Pedidos     from "../components/Pedidos";
 import Distribuidores from "../components/Distribuidores";
+import DistribuidoresActivos from "../components/DistribuidoresActivos";
 import Rentabilidad from "../components/Rentabilidad";
 import Setup       from "../components/Setup";
 import ConnError   from "../components/ui/ConnError";
@@ -140,6 +141,7 @@ export default function Home() {
           />
         )}
         {view === "distribuidores" && <Distribuidores orders={orders} />}
+        {view === "activos" && <DistribuidoresActivos orders={orders} />}
         {view === "rentabilidad" && <Rentabilidad orders={orders} products={products}/>}
         {view === "setup"        && (
           <Setup

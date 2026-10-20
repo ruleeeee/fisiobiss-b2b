@@ -167,7 +167,7 @@ function OrderDetail({order,onClose}){
             <span style={{fontSize:12,color:"#3A6A46"}}>{order.fecha}</span>
           </div>
           {[["Cliente",order.cliente],["Teléfono",order.telefono],["Email",order.email],
-            ["Región",order.region],["Dirección",order.direccion],
+            ["Región",order.region],["Comuna",order.comuna],["Dirección",order.direccion],
             ["Vendedor",order.vendedor],["Medio de Pago",order.medioPago],
             ["Perfil de distribuidor",order.perfilDistribuidor],
             ["Origen",order.origenPedido],

@@ -34,6 +34,7 @@ export default function QuotationView({ order, onClose, embedded = false, closeL
         {order.email ? <div><span style={{ color: "#5A8A66" }}>Email:</span> {order.email}</div> : null}
         {order.direccion ? <div><span style={{ color: "#5A8A66" }}>Dirección:</span> {order.direccion}</div> : null}
         {order.region ? <div><span style={{ color: "#5A8A66" }}>Región:</span> {order.region}</div> : null}
+        {order.comuna ? <div><span style={{ color: "#5A8A66" }}>Comuna:</span> {order.comuna}</div> : null}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 110px 80px 120px", gap: 8, padding: "0 0 8px", borderBottom: "1px solid #1A3520", marginBottom: 8 }}>

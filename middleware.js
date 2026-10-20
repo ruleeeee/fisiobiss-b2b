@@ -9,6 +9,7 @@ export function middleware(request) {
     pathname === "/login" ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/_next") ||
+    pathname.startsWith("/geo") ||
     pathname === "/favicon.ico";
  
   if (isPublic) return NextResponse.next();
