@@ -1,4 +1,6 @@
 "use client";
+import { colors, fonts } from "../../lib/theme";
+import BrandLockup from "../../components/BrandLockup";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
  
@@ -37,62 +39,26 @@ export default function LoginPage() {
   return (
     <div style={{
       minHeight: "100vh", display: "flex", alignItems: "center",
-      justifyContent: "center", background: "#060F07",
-      fontFamily: "'Segoe UI', sans-serif",
+      justifyContent: "center", background: colors.bg,
+      fontFamily: fonts.body,
     }}>
-      {/* Fondo decorativo */}
-      <div style={{
-        position: "fixed", inset: 0, overflow: "hidden", pointerEvents: "none",
-      }}>
-        <div style={{
-          position: "absolute", top: "-20%", left: "-10%",
-          width: 600, height: 600, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(82,183,136,0.07) 0%, transparent 70%)",
-        }}/>
-        <div style={{
-          position: "absolute", bottom: "-20%", right: "-10%",
-          width: 500, height: 500, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(26,94,42,0.1) 0%, transparent 70%)",
-        }}/>
-      </div>
- 
       <div style={{
         position: "relative", width: "100%", maxWidth: 420,
         margin: "0 20px",
       }}>
         {/* Card */}
         <div style={{
-          background: "#0D1F12",
-          border: "1px solid #1A3520",
+          background: colors.paper,
+          border: `1px solid ${colors.line}`,
           borderRadius: 16,
           padding: "40px 36px",
-          boxShadow: "0 24px 64px rgba(0,0,0,0.6)",
+          boxShadow: "0 8px 24px rgba(20,16,18,.08)",
         }}>
           {/* Logo / Header */}
           <div style={{ textAlign: "center", marginBottom: 32 }}>
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: 10,
-              marginBottom: 8,
-            }}>
-              <div style={{
-                width: 42, height: 42, borderRadius: 10,
-                background: "linear-gradient(135deg, #1A5E2A, #52B788)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 20,
-              }}>🌿</div>
-              <div>
-                <div style={{
-                  fontSize: 20, fontWeight: 800, color: "#E8F5EE",
-                  letterSpacing: 1,
-                }}>FISIOBISS</div>
-                <div style={{
-                  fontSize: 10, color: "#3A6A46", letterSpacing: 2,
-                  fontWeight: 600, marginTop: -2,
-                }}>B2B MAYORISTA</div>
-              </div>
-            </div>
+            <BrandLockup height={52} />
             <p style={{
-              color: "#3A6A46", fontSize: 13, margin: "12px 0 0 0",
+              color: colors.muted, fontSize: 13, margin: "12px 0 0 0",
             }}>
               Ingresa tus credenciales para continuar
             </p>
@@ -104,7 +70,7 @@ export default function LoginPage() {
             <div style={{ marginBottom: 16 }}>
               <label style={{
                 display: "block", fontSize: 11, fontWeight: 700,
-                color: "#3A6A46", letterSpacing: 1, marginBottom: 6,
+                color: colors.muted, letterSpacing: 1, marginBottom: 6,
               }}>USUARIO</label>
               <input
                 type="text"
@@ -115,13 +81,13 @@ export default function LoginPage() {
                 required
                 style={{
                   width: "100%", boxSizing: "border-box",
-                  background: "#0A1A0C", border: "1px solid #1A3520",
-                  color: "#E8F5EE", padding: "11px 14px",
+                  background: colors.paper, border: `1px solid ${colors.line}`,
+                  color: colors.ink, padding: "11px 14px",
                   borderRadius: 8, fontSize: 14, outline: "none",
                   transition: "border-color 0.2s",
                 }}
-                onFocus={e => e.target.style.borderColor = "#52B788"}
-                onBlur={e  => e.target.style.borderColor = "#1A3520"}
+                onFocus={e => e.target.style.borderColor = colors.purple}
+                onBlur={e  => e.target.style.borderColor = colors.line}
               />
             </div>
  
@@ -129,7 +95,7 @@ export default function LoginPage() {
             <div style={{ marginBottom: 24 }}>
               <label style={{
                 display: "block", fontSize: 11, fontWeight: 700,
-                color: "#3A6A46", letterSpacing: 1, marginBottom: 6,
+                color: colors.muted, letterSpacing: 1, marginBottom: 6,
               }}>CONTRASEÑA</label>
               <div style={{ position: "relative" }}>
                 <input
@@ -141,13 +107,13 @@ export default function LoginPage() {
                   required
                   style={{
                     width: "100%", boxSizing: "border-box",
-                    background: "#0A1A0C", border: "1px solid #1A3520",
-                    color: "#E8F5EE", padding: "11px 42px 11px 14px",
+                    background: colors.paper, border: `1px solid ${colors.line}`,
+                    color: colors.ink, padding: "11px 42px 11px 14px",
                     borderRadius: 8, fontSize: 14, outline: "none",
                     transition: "border-color 0.2s",
                   }}
-                  onFocus={e => e.target.style.borderColor = "#52B788"}
-                  onBlur={e  => e.target.style.borderColor = "#1A3520"}
+                  onFocus={e => e.target.style.borderColor = colors.purple}
+                  onBlur={e  => e.target.style.borderColor = colors.line}
                 />
                 <button
                   type="button"
@@ -156,7 +122,7 @@ export default function LoginPage() {
                     position: "absolute", right: 12, top: "50%",
                     transform: "translateY(-50%)",
                     background: "none", border: "none",
-                    color: "#3A6A46", cursor: "pointer", fontSize: 16,
+                    color: colors.muted, cursor: "pointer", fontSize: 16,
                     padding: 0, lineHeight: 1,
                   }}
                   title={show ? "Ocultar" : "Mostrar"}
@@ -169,9 +135,9 @@ export default function LoginPage() {
             {/* Error */}
             {error && (
               <div style={{
-                background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)",
+                background: colors.warnSoft, border: `1px solid ${colors.warn}`,
                 borderRadius: 8, padding: "10px 14px",
-                color: "#FCA5A5", fontSize: 13, marginBottom: 16,
+                color: colors.warn, fontSize: 13, marginBottom: 16,
                 display: "flex", alignItems: "center", gap: 8,
               }}>
                 <span>⚠️</span> {error}
@@ -184,10 +150,8 @@ export default function LoginPage() {
               disabled={loading}
               style={{
                 width: "100%", padding: "12px",
-                background: loading
-                  ? "#1A3520"
-                  : "linear-gradient(135deg, #1A5E2A, #2D8A4E)",
-                color: "#E8F5EE", border: "none",
+                background: loading ? colors.line : colors.purple,
+                color: colors.paper, border: "none",
                 borderRadius: 8, fontSize: 15, fontWeight: 700,
                 cursor: loading ? "not-allowed" : "pointer",
                 transition: "opacity 0.2s",
@@ -201,7 +165,7 @@ export default function LoginPage() {
  
         {/* Footer */}
         <p style={{
-          textAlign: "center", color: "#1A3520", fontSize: 11,
+          textAlign: "center", color: colors.line, fontSize: 11,
           marginTop: 20, letterSpacing: 0.5,
         }}>
           © 2026 Fisiobiss SpA · Acceso restringido

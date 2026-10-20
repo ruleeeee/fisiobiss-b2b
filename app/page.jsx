@@ -1,4 +1,5 @@
 "use client";
+import { colors } from "../lib/theme";
 import { C } from "../lib/constants";
 import { useEffect, useState } from "react";
 import { useOrders } from "../hooks/useFirestore";
@@ -103,7 +104,7 @@ export default function Home() {
         <div style={{ width:"40%", height:"100%", background:C.accent,
           animation:"slide 1.2s ease-in-out infinite" }}/>
       </div>
-      <style>{`@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}`}</style>
+      <style>{"@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}"}</style>
     </div>
   );
  
@@ -161,10 +162,10 @@ export default function Home() {
       {toast && (
         <div style={{
           position:"fixed", bottom:24, right:24,
-          background: toast.type === "ok" ? "#1A5E2A" : toast.type === "warn" ? "#7A5000" : "#7B1D1D",
-          color:"#fff", padding:"13px 20px", borderRadius:10,
+          background: toast.type === `ok` ? colors.ink : toast.type === `warn` ? colors.caution : colors.warn,
+          color:colors.paper, padding:"13px 20px", borderRadius:10,
           zIndex:9999, fontSize:13, fontWeight:600,
-          boxShadow:"0 4px 24px rgba(0,0,0,.5)",
+          boxShadow:"0 4px 24px rgba(20,16,18,.12)",
           display:"flex", alignItems:"center", gap:8,
         }}>
           {toast.msg}

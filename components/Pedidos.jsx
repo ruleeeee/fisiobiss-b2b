@@ -1,10 +1,11 @@
+import { colors } from "../lib/theme.js";
 import { useState, useMemo } from "react";
 import { $, N, P } from "../lib/constants";
  
-const selStyle={background:"#0D1F12",border:"1px solid #1A3520",color:"#E8F5EE",padding:"8px 12px",borderRadius:8,fontSize:13,cursor:"pointer"};
-const inpStyle={background:"#0A1A0C",border:"1px solid #1A3520",color:"#90CBF9",padding:"9px 12px",borderRadius:8,fontSize:13,width:"100%",boxSizing:"border-box"};
-const card={background:"#0D1F12",border:"1px solid #1A3520",borderRadius:12,padding:"18px 20px",marginBottom:14};
-function Empty({msg}){return <div style={{padding:"32px 20px",textAlign:"center",color:"#3A6A46",fontSize:13}}>📭 {msg}</div>}
+const selStyle={background:colors.paper,border:`1px solid ${colors.line}`,color:colors.ink,padding:"8px 12px",borderRadius:8,fontSize:13,cursor:"pointer"};
+const inpStyle={background:colors.paper,border:`1px solid ${colors.line}`,color:colors.ink,padding:"9px 12px",borderRadius:8,fontSize:13,width:"100%",boxSizing:"border-box"};
+const card={background:colors.paper,border:`1px solid ${colors.line}`,borderRadius:12,padding:"18px 20px",marginBottom:14};
+function Empty({msg}){return <div style={{padding:"32px 20px",textAlign:"center",color:colors.muted,fontSize:13}}>📭 {msg}</div>}
  
 export default function Pedidos({ orders, deleteOrder, notify }) {
   const [search, setSearch]   = useState("");
@@ -56,7 +57,7 @@ export default function Pedidos({ orders, deleteOrder, notify }) {
     <div>
       <div style={{display:"flex",gap:12,marginBottom:18,alignItems:"center",flexWrap:"wrap"}}>
         <div style={{fontSize:22,fontWeight:800,flex:1}}>Pedidos</div>
-        <span style={{fontSize:12,color:"#3A6A46"}}>{sortedOrders.length} resultados</span>
+        <span style={{fontSize:12,color:colors.muted}}>{sortedOrders.length} resultados</span>
       </div>
  
       <div style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap"}}>
@@ -72,11 +73,11 @@ export default function Pedidos({ orders, deleteOrder, notify }) {
         </select>
       </div>
  
-      <div style={{background:"#0D1F12",border:"1px solid #1A3520",borderRadius:12,overflow:"hidden"}}>
+      <div style={{background:colors.paper,border:`1px solid ${colors.line}`,borderRadius:12,overflow:"hidden"}}>
         <div style={{display:"grid",gridTemplateColumns:"100px 85px 1fr 110px 85px 110px 44px",gap:10,
-          padding:"9px 16px",borderBottom:"1px solid #1A3520",background:"#0A1A0C"}}>
+          padding:"9px 16px",borderBottom:`1px solid ${colors.line}`,background:colors.paper}}>
           {["ID","Fecha","Cliente / Región","Vendedor","Uds.","Total",""].map(h=>(
-            <div key={h} style={{fontSize:9,fontWeight:700,color:"#3A6A46",letterSpacing:1}}>{h.toUpperCase()}</div>
+            <div key={h} style={{fontSize:9,fontWeight:700,color:colors.muted,letterSpacing:1}}>{h.toUpperCase()}</div>
           ))}
         </div>
  
@@ -86,20 +87,20 @@ export default function Pedidos({ orders, deleteOrder, notify }) {
               <div key={o.id} onClick={()=>setDetail(o)}
                 style={{display:"grid",gridTemplateColumns:"100px 85px 1fr 110px 85px 110px 44px",
                   gap:10,padding:"11px 16px",cursor:"pointer",transition:"background .1s",
-                  borderBottom:"1px solid #0D1A0F",background:i%2?"transparent":"rgba(255,255,255,.01)"}}
-                onMouseEnter={e=>e.currentTarget.style.background="rgba(82,183,136,.05)"}
+                  borderBottom:`1px solid ${colors.subtle}`,background:i%2?"transparent":"rgba(255,255,255,.01)"}}
+                onMouseEnter={e=>e.currentTarget.style.background=colors.purpleSoft}
                 onMouseLeave={e=>e.currentTarget.style.background=i%2?"transparent":"rgba(255,255,255,.01)"}>
-                <div style={{fontSize:11,fontWeight:700,color:"#F0B429",fontFamily:"monospace"}}>{o.id}</div>
-                <div style={{fontSize:11,color:"#3A6A46"}}>{o.fecha}</div>
+                <div style={{fontSize:11,fontWeight:700,color:colors.orange,fontFamily:"monospace"}}>{o.id}</div>
+                <div style={{fontSize:11,color:colors.muted}}>{o.fecha}</div>
                 <div>
-                  <div style={{fontSize:12,fontWeight:600,color:"#E8F5EE"}}>{o.cliente||"—"}</div>
-                  <div style={{fontSize:10,color:"#3A6A46"}}>{o.region?.split("(")[0]?.trim()||""}</div>
+                  <div style={{fontSize:12,fontWeight:600,color:colors.ink}}>{o.cliente||"—"}</div>
+                  <div style={{fontSize:10,color:colors.muted}}>{o.region?.split("(")[0]?.trim()||""}</div>
                 </div>
-                <div style={{fontSize:11,color:"#7EC8A4"}}>{o.vendedor||"—"}</div>
-                <div style={{fontSize:12,fontWeight:600,color:"#7EC8A4"}}>{N(o.totalUnidades)}</div>
-                <div style={{fontSize:12,fontWeight:700,color:"#52B788"}}>{$(o.totalPagar)}</div>
+                <div style={{fontSize:11,color:colors.muted}}>{o.vendedor||"—"}</div>
+                <div style={{fontSize:12,fontWeight:600,color:colors.muted}}>{N(o.totalUnidades)}</div>
+                <div style={{fontSize:12,fontWeight:700,color:colors.purple}}>{$(o.totalPagar)}</div>
                 <div onClick={e=>delOrder(o.id,e)} style={{display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  <button style={{background:"transparent",border:"1px solid #3A1010",color:"#A03030",
+                  <button style={{background:"transparent",border:`1px solid ${colors.warnSoft}`,color:colors.warn,
                     borderRadius:6,width:28,height:28,cursor:"pointer",fontSize:14,display:"flex",
                     alignItems:"center",justifyContent:"center",lineHeight:1}}
                     title="Eliminar pedido">
@@ -112,11 +113,11 @@ export default function Pedidos({ orders, deleteOrder, notify }) {
         )}
  
         {pages>1 && (
-          <div style={{display:"flex",justifyContent:"center",gap:6,padding:"12px",borderTop:"1px solid #1A3520"}}>
+          <div style={{display:"flex",justifyContent:"center",gap:6,padding:"12px",borderTop:`1px solid ${colors.line}`}}>
             {Array.from({length:pages},(_,i)=>(
               <button key={i} onClick={()=>setPage(i+1)}
-                style={{background:page===i+1?"#1A5E2A":"transparent",color:page===i+1?"#fff":"#3A6A46",
-                  border:"1px solid #1A3520",borderRadius:6,padding:"5px 10px",cursor:"pointer",fontSize:12}}>
+                style={{background:page===i+1?colors.ink:"transparent",color:page===i+1?colors.paper:colors.muted,
+                  border:`1px solid ${colors.line}`,borderRadius:6,padding:"5px 10px",cursor:"pointer",fontSize:12}}>
                 {i+1}
               </button>
             ))}
@@ -126,13 +127,13 @@ export default function Pedidos({ orders, deleteOrder, notify }) {
  
       {/* Recuadro Inferior de Resumen */}
       <div style={{
-        background: "#0D1F12", border: "1px solid #1A3520", padding: "14px 20px", 
+        background: colors.paper, border: `1px solid ${colors.line}`, padding: "14px 20px", 
         borderRadius: "8px", display: "flex", justifyContent: "space-between", 
-        alignItems: "center", marginTop: "16px", color: "#7EC8A4", fontSize: "14px", fontWeight: 600
+        alignItems: "center", marginTop: `16px`, color: colors.muted, fontSize: `14px`, fontWeight: 600
       }}>
-         <div>Filtrados: <span style={{color: "#E8F5EE", fontWeight: 700}}>{sortedOrders.length} pedidos</span></div>
-         <div>Revenue: <span style={{color: "#52B788", fontWeight: 700}}>{$(sortedOrders.reduce((acc, o) => acc + (o.totalPagar || 0), 0))}</span></div>
-         <div>Unidades: <span style={{color: "#E8F5EE", fontWeight: 700}}>{N(sortedOrders.reduce((acc, o) => acc + (o.totalUnidades || 0), 0))}</span></div>
+         <div>Filtrados: <span style={{color: colors.ink, fontWeight: 700}}>{sortedOrders.length} pedidos</span></div>
+         <div>Revenue: <span style={{color: colors.purple, fontWeight: 700}}>{$(sortedOrders.reduce((acc, o) => acc + (o.totalPagar || 0), 0))}</span></div>
+         <div>Unidades: <span style={{color: colors.ink, fontWeight: 700}}>{N(sortedOrders.reduce((acc, o) => acc + (o.totalUnidades || 0), 0))}</span></div>
       </div>
     </div>
   );
@@ -156,15 +157,15 @@ function OrderDetail({order,onClose}){
   const mg           = totalPagar ? gp/(totalPagar/1.19) : 0;
   return (
     <div>
-      <button onClick={onClose} style={{background:"transparent",border:"1px solid #1A3520",color:"#5A8A66",
+      <button onClick={onClose} style={{background:"transparent",border:`1px solid ${colors.line}`,color:colors.muted,
         padding:"7px 14px",borderRadius:7,cursor:"pointer",marginBottom:14,fontSize:13}}>
         ← Volver a Pedidos
       </button>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
         <div style={card}>
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:14}}>
-            <span style={{fontSize:20,fontWeight:800,color:"#F0B429",fontFamily:"monospace"}}>{order.id}</span>
-            <span style={{fontSize:12,color:"#3A6A46"}}>{order.fecha}</span>
+            <span style={{fontSize:20,fontWeight:800,color:colors.orange,fontFamily:"monospace"}}>{order.id}</span>
+            <span style={{fontSize:12,color:colors.muted}}>{order.fecha}</span>
           </div>
           {[["Cliente",order.cliente],["Teléfono",order.telefono],["Email",order.email],
             ["Región",order.region],["Comuna",order.comuna],["Dirección",order.direccion],
@@ -174,15 +175,15 @@ function OrderDetail({order,onClose}){
             ["Canal de adquisición",order.canalAdquisicion],
             ["N° pedido cliente",order.nPedidoCliente]].map(([l,v])=>v&&v!=="nan"?(
             <div key={l} style={{marginBottom:8}}>
-              <div style={{fontSize:9,color:"#3A6A46",letterSpacing:1,fontWeight:700}}>{l.toUpperCase()}</div>
-              <div style={{fontSize:13,color:"#E8F5EE",marginTop:2}}>{v}</div>
+              <div style={{fontSize:9,color:colors.muted,letterSpacing:1,fontWeight:700}}>{l.toUpperCase()}</div>
+              <div style={{fontSize:13,color:colors.ink,marginTop:2}}>{v}</div>
             </div>
           ):null)}
           {order.comprobante ? (
             <div style={{marginTop:10}}>
-              <div style={{fontSize:9,color:"#3A6A46",letterSpacing:1,fontWeight:700}}>COMPROBANTE</div>
+              <div style={{fontSize:9,color:colors.muted,letterSpacing:1,fontWeight:700}}>COMPROBANTE</div>
               <a href={order.comprobante} target="_blank" rel="noreferrer"
-                style={{fontSize:13,color:"#F0B429",marginTop:2,display:"inline-block"}}>
+                style={{fontSize:13,color:colors.orange,marginTop:2,display:"inline-block"}}>
                 Ver comprobante
               </a>
             </div>
@@ -190,29 +191,29 @@ function OrderDetail({order,onClose}){
         </div>
         <div>
           <div style={card}>
-            <div style={{fontSize:10,fontWeight:700,color:"#52B788",letterSpacing:1,marginBottom:12}}>PRODUCTOS</div>
+            <div style={{fontSize:10,fontWeight:700,color:colors.purple,letterSpacing:1,marginBottom:12}}>PRODUCTOS</div>
             {(order.items||[]).filter(it=>it.qty>0).map(it=>(
               <div key={it.id} style={{display:"flex",justifyContent:"space-between",marginBottom:7,fontSize:12}}>
-                <span style={{color:"#7EC8A4"}}>{it.name} ×{it.qty}{it.regalo>0?` (+${it.regalo} regalo)`:""}</span>
+                <span style={{color:colors.muted}}>{it.name} ×{it.qty}{it.regalo>0?` (+${it.regalo} regalo)`:""}</span>
                 <span style={{fontWeight:600}}>{$(it.qty*it.precio)}</span>
               </div>
             ))}
-            <div style={{borderTop:"1px solid #1A3520",marginTop:10,paddingTop:10}}>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:5,color:"#3A6A46"}}>
+            <div style={{borderTop:`1px solid ${colors.line}`,marginTop:10,paddingTop:10}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:5,color:colors.muted}}>
                 <span>Envío</span><span>{$(costoEnvio)}</span>
               </div>
               {Math.abs(ajuste) > 1 && (
-                <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:5,color:"#F0B429"}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:5,color:colors.orange}}>
                   <span>{esDescuento ? `Descuento ${pct}%` : "Ajuste"}</span>
                   <span>{$(-ajuste)}</span>
                 </div>
               )}
               <div style={{display:"flex",justifyContent:"space-between",fontSize:18,fontWeight:800}}>
-                <span>Total</span><span style={{color:"#52B788"}}>{$(totalPagar)}</span>
+                <span>Total</span><span style={{color:colors.purple}}>{$(totalPagar)}</span>
               </div>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#3A6A46",marginTop:6}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:colors.muted,marginTop:6}}>
                 <span>Gross Profit est.</span>
-                <span style={{color:"#F0B429"}}>{$(gp)} ({P(mg)})</span>
+                <span style={{color:colors.orange}}>{$(gp)} ({P(mg)})</span>
               </div>
             </div>
           </div>

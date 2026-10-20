@@ -6,7 +6,7 @@ export const s = {
     borderRadius: "12px",
     padding: "20px",
     border: `1px solid ${C.cardB}`,
-    boxShadow: "0 4px 12px rgba(0,0,0,0.5)"
+    boxShadow: "0 4px 12px rgba(20,16,18,.12)"
   },
   input: {
     width: "100%",

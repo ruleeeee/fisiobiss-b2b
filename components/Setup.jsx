@@ -1,9 +1,10 @@
+import { colors } from "../lib/theme.js";
 // components/Setup.jsx
 import { useState } from "react";
 import { $, P, REGIONS, VENDORS, PRODUCTS as FALLBACK_PRODUCTS } from "../lib/constants";
 
-const inpStyle = { background: "#0A1A0C", border: "1px solid #1A3520", color: "#90CBF9", padding: "9px 12px", borderRadius: 8, fontSize: 13, width: "100%", boxSizing: "border-box" };
-const card = { background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 12, padding: "18px 20px", marginBottom: 14 };
+const inpStyle = { background: colors.paper, border: `1px solid ${colors.line}`, color: colors.ink, padding: "9px 12px", borderRadius: 8, fontSize: 13, width: "100%", boxSizing: "border-box" };
+const card = { background: colors.paper, border: `1px solid ${colors.line}`, borderRadius: 12, padding: "18px 20px", marginBottom: 14 };
 
 export default function Setup({
   regions: propRegions, setRegions: propSetRegions, onSaveRegions,
@@ -85,7 +86,7 @@ export default function Setup({
 
         {sub === "productos" && (
           <button onClick={handleSave} disabled={isSaving} style={{
-            background: "#4A7A56", color: "#0A1A0C", border: "none",
+            background: colors.purple, color: colors.paper, border: "none",
             borderRadius: 8, padding: "10px 18px", cursor: isSaving ? "wait" : "pointer",
             fontSize: 14, fontWeight: 800, transition: "0.2s", opacity: isSaving ? 0.7 : 1
           }}>
@@ -97,9 +98,9 @@ export default function Setup({
       <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
         {[["productos", "📦 Productos & SKUs"], ["regiones", "🌎 Regiones"], ["vendedores", "👤 Vendedores"]].map(([id, lbl]) => (
           <button key={id} onClick={() => setSub(id)} style={{
-            background: sub === id ? "#1A5E2A" : "transparent",
-            color: sub === id ? "#fff" : "#5A8A66",
-            border: `1px solid ${sub === id ? "#2D7A3A" : "#1A3520"}`,
+            background: sub === id ? colors.ink : "transparent",
+            color: sub === id ? colors.paper : colors.muted,
+            border: `1px solid ${sub === id ? colors.ok : colors.line}`,
             borderRadius: 8, padding: "8px 16px", cursor: "pointer", fontSize: 13, fontWeight: 600
           }}>
             {lbl}
@@ -109,11 +110,11 @@ export default function Setup({
 
       {sub === "productos" && (
         <div style={card}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "#52B788", letterSpacing: 1, marginBottom: 14 }}>CATÁLOGO DE PRODUCTOS</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: colors.purple, letterSpacing: 1, marginBottom: 14 }}>CATÁLOGO DE PRODUCTOS</div>
 
           <div style={{ display: "grid", gridTemplateColumns: "80px 2fr 120px 120px 70px 55px", gap: 8, marginBottom: 8 }}>
             {["SKU", "Nombre", "Precio B2B", "Costo Neto", "Margen", "Activo"].map(h => (
-              <div key={h} style={{ fontSize: 9, fontWeight: 700, color: "#3A6A46", letterSpacing: 1 }}>{h.toUpperCase()}</div>
+              <div key={h} style={{ fontSize: 9, fontWeight: 700, color: colors.muted, letterSpacing: 1 }}>{h.toUpperCase()}</div>
             ))}
           </div>
 
@@ -123,9 +124,9 @@ export default function Setup({
               return (
                 <div key={p.id} style={{
                   display: "grid", gridTemplateColumns: "80px 2fr 120px 120px 70px 55px",
-                  gap: 8, padding: "5px 0", borderBottom: "1px solid #0D1A0F", opacity: p.active ? 1 : 0.4
+                  gap: 8, padding: "5px 0", borderBottom: `1px solid ${colors.subtle}`, opacity: p.active ? 1 : 0.4
                 }}>
-                  <div style={{ fontSize: 10, color: "#F0B429", fontFamily: "monospace", display: "flex", alignItems: "center" }}>{p.id}</div>
+                  <div style={{ fontSize: 10, color: colors.orange, fontFamily: "monospace", display: "flex", alignItems: "center" }}>{p.id}</div>
                   <input
                     value={p.name}
                     onChange={e => updProd(p.id, "name", e.target.value)}
@@ -143,14 +144,14 @@ export default function Setup({
                     onChange={e => updProd(p.id, "costo", e.target.value)}
                     style={{ ...inpStyle, padding: "5px 8px", fontSize: 11 }}
                   />
-                  <div style={{ fontSize: 11, fontWeight: 700, color: mg >= 0.55 ? "#52B788" : "#F0B429", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: mg >= 0.55 ? colors.purple : colors.orange, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     {P(mg)}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <button onClick={() => toggleP(p.id)} style={{
-                      background: p.active ? "#1A5E2A" : "transparent",
-                      border: `1px solid ${p.active ? "#2D7A3A" : "#1A3520"}`,
-                      color: p.active ? "#fff" : "#3A6A46",
+                      background: p.active ? colors.ink : "transparent",
+                      border: `1px solid ${p.active ? colors.ok : colors.line}`,
+                      color: p.active ? colors.paper : colors.muted,
                       borderRadius: 6, padding: "3px 8px", cursor: "pointer", fontSize: 10
                     }}>
                       {p.active ? "ON" : "OFF"}
@@ -162,8 +163,8 @@ export default function Setup({
           </div>
 
           {/* Formulario para agregar producto nuevo */}
-          <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid #1A3520" }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "#52B788", letterSpacing: 1, marginBottom: 10 }}>AGREGAR PRODUCTO</div>
+          <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${colors.line}` }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: colors.purple, letterSpacing: 1, marginBottom: 10 }}>AGREGAR PRODUCTO</div>
             <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr auto", gap: 10 }}>
               <input
                 value={newP.name}
@@ -186,7 +187,7 @@ export default function Setup({
                 style={inpStyle}
               />
               <button onClick={addP} style={{
-                background: "#1A5E2A", color: "#fff", border: "none",
+                background: colors.ink, color: colors.paper, border: "none",
                 borderRadius: 8, padding: "9px 16px", cursor: "pointer", fontSize: 13, fontWeight: 700, whiteSpace: "nowrap"
               }}>
                 + Agregar
@@ -199,10 +200,10 @@ export default function Setup({
       {sub === "regiones" && (
         <div style={card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "#52B788", letterSpacing: 1 }}>REGIONES Y COSTOS DE ENVÍO</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: colors.purple, letterSpacing: 1 }}>REGIONES Y COSTOS DE ENVÍO</div>
             <button onClick={handleSaveRegions} disabled={isSavingRegions} style={{
-              background: regionsSaved ? "#0D1F12" : "#1A5E2A", color: regionsSaved ? "#52B788" : "#fff",
-              border: `1px solid ${regionsSaved ? "#2D5A3A" : "#1A5E2A"}`,
+              background: regionsSaved ? colors.paper : colors.ink, color: regionsSaved ? colors.purple : colors.paper,
+              border: `1px solid ${regionsSaved ? colors.line : colors.ink}`,
               borderRadius: 8, padding: "7px 16px", cursor: isSavingRegions ? "wait" : "pointer",
               fontSize: 12, fontWeight: 700, transition: "0.2s", opacity: isSavingRegions ? 0.6 : 1
             }}>
@@ -211,17 +212,17 @@ export default function Setup({
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8, marginBottom: 8 }}>
             {["Región", "Costo Envío (CLP)"].map(h => (
-              <div key={h} style={{ fontSize: 9, fontWeight: 700, color: "#3A6A46", letterSpacing: 1 }}>{h.toUpperCase()}</div>
+              <div key={h} style={{ fontSize: 9, fontWeight: 700, color: colors.muted, letterSpacing: 1 }}>{h.toUpperCase()}</div>
             ))}
           </div>
           {regions.map((r) => (
-            <div key={r.name} style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8, padding: "6px 0", borderBottom: "1px solid #0D1A0F", alignItems: "center" }}>
+            <div key={r.name} style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8, padding: "6px 0", borderBottom: `1px solid ${colors.subtle}`, alignItems: "center" }}>
               <div style={{ fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center" }}>{r.name}</div>
               <input
                 type="number" min="0"
                 value={r.envio}
                 onChange={e => updRegion(r.name, e.target.value)}
-                style={{ ...inpStyle, padding: "5px 10px", fontSize: 13, fontWeight: 700, color: "#F0B429", borderColor: "#2A3A1A", textAlign: "right" }}
+                style={{ ...inpStyle, padding: `5px 10px`, fontSize: 13, fontWeight: 700, color: colors.orange, borderColor: colors.line, textAlign: `right` }}
               />
             </div>
           ))}
@@ -230,9 +231,9 @@ export default function Setup({
 
       {sub === "vendedores" && (
         <div style={card}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "#52B788", letterSpacing: 1, marginBottom: 14 }}>EQUIPO DE VENTAS</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: colors.purple, letterSpacing: 1, marginBottom: 14 }}>EQUIPO DE VENTAS</div>
           {VENDORS.map((v, i) => (
-            <div key={i} style={{ padding: "10px 0", borderBottom: "1px solid #0D1A0F", fontSize: 13, fontWeight: 500 }}>
+            <div key={i} style={{ padding: "10px 0", borderBottom: `1px solid ${colors.subtle}`, fontSize: 13, fontWeight: 500 }}>
               👤 {v}
             </div>
           ))}

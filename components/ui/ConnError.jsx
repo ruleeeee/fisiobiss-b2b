@@ -1,5 +1,5 @@
-// components/ui/ConnError.jsx
 "use client";
+import { colors } from "../../lib/theme";
 import { C } from "../../lib/constants";
 
 export default function ConnError({ error, onRetry }) {
@@ -17,7 +17,7 @@ export default function ConnError({ error, onRetry }) {
       }}>
         <div style={{ textAlign:"center", marginBottom:24 }}>
           <span style={{ fontSize:40 }}>⚠️</span>
-          <div style={{ fontSize:20, fontWeight:800, color:"#EF9A9A", marginTop:10 }}>
+          <div style={{ fontSize:20, fontWeight:800, color:colors.warnSoft, marginTop:10 }}>
             Error de conexión
           </div>
           <div style={{ fontSize:13, color:C.gold, marginTop:6 }}>
@@ -27,8 +27,8 @@ export default function ConnError({ error, onRetry }) {
 
         {/* Error message */}
         <div style={{
-          background:C.nav, border:`1px solid #7B1D1D`, borderRadius:8,
-          padding:"12px 16px", marginBottom:20, fontSize:12, color:"#EF9A9A",
+          background:C.nav, border:`1px solid ${colors.warn}`, borderRadius:8,
+          padding:"12px 16px", marginBottom:20, fontSize:12, color:colors.warnSoft,
           fontFamily:"monospace", wordBreak:"break-word",
         }}>
           {msg || "Error desconocido"}

@@ -1,3 +1,4 @@
+import { colors } from "../lib/theme.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { geoMercator } from "d3-geo";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
@@ -12,30 +13,45 @@ const ZOOM_H = 640;
 const MIN_Z = 1;
 const MAX_Z = 8;
 
+const MAP_DARK = [
+  "#6414B8",
+  "#C24510",
+  "#1A6240",
+  "#8C3014",
+  "#332A86",
+  "#1A5560",
+  "#5C4034",
+  "#7A1844",
+  "#3E5418",
+  "#642456",
+  "#1E3A6E",
+  "#6E3218",
+  "#244232",
+  "#4A2878",
+  "#5C3030",
+  "#2A3830",
+];
+
 const REGION_FILL = {
-  "Arica y Parinacota (XV)": "#6E9A78",
-  "Tarapacá (I)": "#8FB396",
-  "Antofagasta (II)": "#A8C4A4",
-  "Atacama (III)": "#E4EFE4",
-  "Coquimbo (IV)": "#7A9E82",
-  "Valparaíso (V)": "#C5D9C4",
-  "Metropolitana (RM)": "#9BB8A0",
-  "O'Higgins (VI)": "#DCE8DC",
-  "Maule (VII)": "#B7D4BE",
-  "Ñuble (XVI)": "#52B788",
-  "Biobío (VIII)": "#7EC8A4",
-  "Araucanía (IX)": "#C8E6D4",
-  "Los Ríos (XIV)": "#E8F5EE",
-  "Los Lagos (X)": "#A8D8C4",
-  "Aysén (XI)": "#5EBEB0",
-  "Magallanes (XII)": "#3D9A8C",
+  "Arica y Parinacota (XV)": MAP_DARK[0],
+  "Tarapacá (I)": MAP_DARK[1],
+  "Antofagasta (II)": MAP_DARK[2],
+  "Atacama (III)": MAP_DARK[3],
+  "Coquimbo (IV)": MAP_DARK[4],
+  "Valparaíso (V)": MAP_DARK[5],
+  "Metropolitana (RM)": MAP_DARK[6],
+  "O'Higgins (VI)": MAP_DARK[7],
+  "Maule (VII)": MAP_DARK[8],
+  "Ñuble (XVI)": MAP_DARK[9],
+  "Biobío (VIII)": MAP_DARK[10],
+  "Araucanía (IX)": MAP_DARK[11],
+  "Los Ríos (XIV)": MAP_DARK[12],
+  "Los Lagos (X)": MAP_DARK[13],
+  "Aysén (XI)": MAP_DARK[14],
+  "Magallanes (XII)": MAP_DARK[15],
 };
 
-const COMMUNE_FILL = [
-  "#6E9A78", "#8FB396", "#A8C4A4", "#E4EFE4", "#7A9E82", "#C5D9C4",
-  "#9BB8A0", "#DCE8DC", "#B7D4BE", "#52B788", "#7EC8A4", "#C8E6D4",
-  "#E8F5EE", "#A8D8C4", "#5EBEB0", "#3D9A8C",
-];
+const COMMUNE_FILL = MAP_DARK;
 
 function fit(geo, drilled) {
   const h = drilled ? ZOOM_H : MAP_H;
@@ -130,15 +146,15 @@ export default function ChileIllustratedMap({
   };
 
   const btn = {
-    width: 36, height: 36, borderRadius: 8, border: "1px solid #1A3520",
-    background: "#0C1A0F", color: "#52B788", fontSize: 18, fontWeight: 800,
+    width: 36, height: 36, borderRadius: 8, border: `1px solid ${colors.line}`,
+    background: colors.paper, color: colors.purple, fontSize: 18, fontWeight: 800,
     cursor: "pointer", lineHeight: 1,
   };
 
   return (
     <div>
       <div style={{
-        background: "#07100A",
+        background: colors.bg,
         borderRadius: 12,
         overflow: "hidden",
         position: "relative",
@@ -162,13 +178,13 @@ export default function ChileIllustratedMap({
       }}>
         <div style={{
           position: "absolute", left: 14, top: 12, right: 14, zIndex: 2,
-          minHeight: 20, fontSize: 13, fontWeight: 700, color: "#E8F5EE",
+          minHeight: 20, fontSize: 13, fontWeight: 700, color: colors.ink,
           pointerEvents: "none",
         }}>
           {hover ? `${hover.name} · ${hover.count} activos` : ""}
         </div>
-        {error && <div style={{ color: "#E87040", fontSize: 13, padding: 12 }}>{error}</div>}
-        {loading && !geo && <div style={{ color: "#7EC8A4", fontSize: 14, padding: 28 }}>Cargando mapa…</div>}
+        {error && <div style={{ color: colors.orange, fontSize: 13, padding: 12 }}>{error}</div>}
+        {loading && !geo && <div style={{ color: colors.muted, fontSize: 14, padding: 28 }}>Cargando mapa…</div>}
         {geo && (
           <ComposableMap
             projection={projection}
@@ -183,8 +199,8 @@ export default function ChileIllustratedMap({
                 const regionApp = geoFeatureName(g.properties, "region");
                 const n = countByName(counts, name);
                 const on = picked(name) || hover?.name === name;
-                const fill = on ? "#7EC8A4" : fillOf(name, idx);
-                const stroke = on ? "#E8F5EE" : "#0D1F12";
+                const fill = on ? colors.ink : fillOf(name, idx);
+                const stroke = on ? colors.ink : colors.paper;
                 return (
                   <Geography
                     key={g.rsmKey}
@@ -229,7 +245,7 @@ export default function ChileIllustratedMap({
             placeholder="Buscar comuna…"
             style={{
               width: "100%", boxSizing: "border-box",
-              background: "#0A1A0C", border: "1px solid #1A3520", color: "#E8F5EE",
+              background: colors.paper, border: `1px solid ${colors.line}`, color: colors.ink,
               padding: "12px 14px", borderRadius: 8, fontSize: 14, marginBottom: 10,
             }}
           />
@@ -246,9 +262,9 @@ export default function ChileIllustratedMap({
                   onClick={() => onComuna(name)}
                   style={{
                     textAlign: "left",
-                    background: on ? "#1A3520" : "transparent",
-                    border: `1px solid ${on ? "#52B788" : "#1A3520"}`,
-                    color: on ? "#52B788" : "#E8F5EE",
+                    background: on ? colors.line : "transparent",
+                    border: `1px solid ${on ? colors.purple : colors.line}`,
+                    color: on ? colors.purple : colors.ink,
                     borderRadius: 8,
                     padding: "12px 14px",
                     cursor: "pointer",
@@ -259,11 +275,11 @@ export default function ChileIllustratedMap({
                   }}
                 >
                   <span>{name}</span>
-                  <span style={{ color: "#52B788", fontWeight: 800 }}>{n}</span>
+                  <span style={{ color: colors.purple, fontWeight: 800 }}>{n}</span>
                 </button>
               );
             })}
-            {shown.length === 0 && <div style={{ color: "#5A8A66", fontSize: 14, padding: 8 }}>Sin comunas con ese nombre.</div>}
+            {shown.length === 0 && <div style={{ color: colors.muted, fontSize: 14, padding: 8 }}>Sin comunas con ese nombre.</div>}
           </div>
         </div>
       )}

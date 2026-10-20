@@ -1,3 +1,4 @@
+import { colors, tiers } from "../lib/theme.js";
 // components/Distribuidores.jsx
 import { useState, useMemo } from "react";
 import {
@@ -9,10 +10,10 @@ import { buildClientIndex } from "../lib/clientIdentity";
 
 // ─── Tier config ──────────────────────────────────────────────────────────────
 const TIERS = [
-  { id: "oro",   label: "ORO",      icon: "🏆", min: 500000, color: "#B8860B", bg: "#2A1F00", border: "#B8860B" },
-  { id: "plata", label: "PLATA",    icon: "🥈", min: 300000, color: "#8EA8B8", bg: "#0F1F2A", border: "#5A8098" },
-  { id: "verde", label: "VERDE",    icon: "🌿", min: 150000, color: "#52B788", bg: "#0D1F12", border: "#2A5A36" },
-  { id: "sin",   label: "SIN TIER", icon: "–",  min: 0,      color: "#4A5568", bg: "#0F1418", border: "#2D3748" },
+  { id: "oro",   label: "ORO",      icon: "🏆", min: 500000, color: tiers.oro.fg, bg: colors.orangeSoft, border: tiers.oro.fg },
+  { id: "plata", label: "PLATA",    icon: "🥈", min: 300000, color: tiers.plata.fg, bg: colors.paper, border: colors.muted },
+  { id: "verde", label: "VERDE",    icon: "🌿", min: 150000, color: colors.purple, bg: colors.paper, border: colors.muted },
+  { id: "sin",   label: "SIN TIER", icon: "–",  min: 0,      color: tiers.sin.fg, bg: colors.bg, border: colors.ink },
 ];
 
 function getTier(monthlySpend) {
@@ -23,7 +24,7 @@ function getTier(monthlySpend) {
 }
 
 const selStyle = {
-  background: "#0D1F12", border: "1px solid #1A3520", color: "#E8F5EE",
+  background: colors.paper, border: `1px solid ${colors.line}`, color: colors.ink,
   padding: "8px 12px", borderRadius: 8, fontSize: 13, cursor: "pointer",
 };
 
@@ -32,22 +33,22 @@ const PERFIL_KEYS = [...PERFILES_DIST, SIN_DATO];
 const ORIGEN_KEYS = [...ORIGENES_PEDIDO, SIN_DATO];
 const CANAL_KEYS = [...CANALES_ADQUISICION, SIN_DATO];
 const PERFIL_COLORS = {
-  "Distribuidor natural": "#52B788",
-  "Local": "#4A90D9",
-  "Profesional de la salud": "#9B59B6",
-  [SIN_DATO]: "#3A6A46",
+  "Distribuidor natural": colors.purple,
+  "Local": colors.purple,
+  "Profesional de la salud": colors.purple,
+  [SIN_DATO]: colors.muted,
 };
 const ORIGEN_COLORS = {
-  "Lead nuevo": "#52B788",
-  "Cliente antiguo": "#F0B429",
-  [SIN_DATO]: "#3A6A46",
+  "Lead nuevo": colors.purple,
+  "Cliente antiguo": colors.orange,
+  [SIN_DATO]: colors.muted,
 };
 const CANAL_COLORS = {
-  "Contacto Directo": "#52B788",
-  "Meta": "#4A90D9",
-  "TikTok": "#E87040",
-  "Landing page": "#9B59B6",
-  [SIN_DATO]: "#3A6A46",
+  "Contacto Directo": colors.purple,
+  "Meta": colors.purple,
+  "TikTok": colors.orange,
+  "Landing page": colors.purple,
+  [SIN_DATO]: colors.muted,
 };
 
 const monthLabel = (m) => `${m.slice(5)}/${m.slice(2, 4)}`;
@@ -253,19 +254,19 @@ export default function Distribuidores({ orders = [] }) {
   const frecDist = filtered.filter(d => !d.isNew);
 
   // ─── Subcomponentes ───────────────────────────────────────────────────────
-  const KPI = ({ icon, label, value, sub, color = "#52B788" }) => (
-    <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 12, padding: "14px 16px", flex: 1, minWidth: 120 }}>
-      <div style={{ fontSize: 10, color: "#5A8A66", fontWeight: 700, letterSpacing: 1, marginBottom: 5, display: "flex", alignItems: "center", gap: 5 }}>
+  const KPI = ({ icon, label, value, sub, color = colors.purple }) => (
+    <div style={{ background: colors.paper, border: `1px solid ${colors.line}`, borderRadius: 12, padding: "14px 16px", flex: 1, minWidth: 120 }}>
+      <div style={{ fontSize: 10, color: colors.muted, fontWeight: 700, letterSpacing: 1, marginBottom: 5, display: "flex", alignItems: "center", gap: 5 }}>
         <span style={{ fontSize: 15 }}>{icon}</span>{label.toUpperCase()}
       </div>
       <div style={{ fontSize: 22, fontWeight: 800, color, lineHeight: 1.1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: "#4A7A56", marginTop: 4 }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 11, color: colors.purple, marginTop: 4 }}>{sub}</div>}
     </div>
   );
 
   const Chart = ({ title, children }) => (
-    <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 12, padding: "14px 16px" }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: "#5A8A66", letterSpacing: 1, marginBottom: 10 }}>{title.toUpperCase()}</div>
+    <div style={{ background: colors.paper, border: `1px solid ${colors.line}`, borderRadius: 12, padding: "14px 16px" }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, letterSpacing: 1, marginBottom: 10 }}>{title.toUpperCase()}</div>
       {children}
     </div>
   );
@@ -273,9 +274,9 @@ export default function Distribuidores({ orders = [] }) {
   const formatClassif = (v) => classifMetric === "revenue" ? $(v) : N(v);
 
   const TT = ({ active, payload, label }) => active && payload?.length ? (
-    <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 8, padding: "8px 12px", fontSize: 12 }}>
-      <div style={{ color: "#5A8A66", marginBottom: 4 }}>{label}</div>
-      {payload.map((p, i) => <div key={i} style={{ color: p.color || "#52B788", fontWeight: 700 }}>{p.name}: {p.value}</div>)}
+    <div style={{ background: colors.paper, border: `1px solid ${colors.line}`, borderRadius: 8, padding: "8px 12px", fontSize: 12 }}>
+      <div style={{ color: colors.muted, marginBottom: 4 }}>{label}</div>
+      {payload.map((p, i) => <div key={i} style={{ color: p.color || colors.purple, fontWeight: 700 }}>{p.name}: {p.value}</div>)}
     </div>
   ) : null;
 
@@ -285,11 +286,11 @@ export default function Distribuidores({ orders = [] }) {
     const tot = payload[0]?.payload?.total || items.reduce((s, p) => s + (p.value || 0), 0);
     const title = (label && Number.isNaN(Number(label)) ? label : payload[0]?.payload?.name) || "";
     return (
-      <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 8, padding: "8px 12px", fontSize: 12 }}>
-        <div style={{ color: "#5A8A66", marginBottom: 4 }}>{title}</div>
+      <div style={{ background: colors.paper, border: `1px solid ${colors.line}`, borderRadius: 8, padding: "8px 12px", fontSize: 12 }}>
+        <div style={{ color: colors.muted, marginBottom: 4 }}>{title}</div>
         {items.map((p, i) => {
           const pct = tot ? ((p.value / tot) * 100).toFixed(1) : "0.0";
-          return <div key={i} style={{ color: p.color || "#52B788", fontWeight: 700 }}>{p.name}: {formatClassif(p.value)} ({pct}%)</div>;
+          return <div key={i} style={{ color: p.color || colors.purple, fontWeight: 700 }}>{p.name}: {formatClassif(p.value)} ({pct}%)</div>;
         })}
       </div>
     );
@@ -301,17 +302,17 @@ export default function Distribuidores({ orders = [] }) {
         const row = state?.activePayload?.[0]?.payload;
         if (row?.mes) setMes(row.mes);
       }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#1A3520" />
-        <XAxis dataKey="label" tick={{ fill: "#4A7A56", fontSize: 10 }} />
-        <YAxis tick={{ fill: "#4A7A56", fontSize: 10 }} tickFormatter={v => classifMetric === "revenue" ? $(v).replace("$", "") : v} allowDecimals={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke={colors.line} />
+        <XAxis dataKey="label" tick={{ fill: colors.purple, fontSize: 10 }} />
+        <YAxis tick={{ fill: colors.purple, fontSize: 10 }} tickFormatter={v => classifMetric === "revenue" ? $(v).replace("$", "") : v} allowDecimals={false} />
         <Tooltip content={<ClassifTT />} />
-        <Legend iconSize={8} wrapperStyle={{ fontSize: 10, color: "#5A8A66" }} />
+        <Legend iconSize={8} wrapperStyle={{ fontSize: 10, color: colors.muted }} />
         {keys.map(k => (
           <Bar key={k} dataKey={k} stackId="a" fill={colors[k]} cursor="pointer"
             radius={k === keys[keys.length - 1] ? [3, 3, 0, 0] : [0, 0, 0, 0]} name={k}
             onClick={(row) => { if (row?.mes) setMes(row.mes); toggleClassif(dim, k); }} />
         ))}
-        <Line type="monotone" dataKey="total" stroke="#E8F5EE" strokeWidth={2} dot={{ r: 3 }} name="Total" />
+        <Line type="monotone" dataKey="total" stroke={colors.ink} strokeWidth={2} dot={{ r: 3 }} name="Total" />
       </ComposedChart>
     </ResponsiveContainer>
   );
@@ -322,13 +323,13 @@ export default function Distribuidores({ orders = [] }) {
     return (
     <ResponsiveContainer width="100%" height={190}>
       <BarChart data={withTot} layout="vertical" margin={{ left: 8, right: 16 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#1A3520" />
-        <XAxis type="number" tick={{ fill: "#4A7A56", fontSize: 10 }} tickFormatter={v => classifMetric === "revenue" ? $(v).replace("$", "") : v} allowDecimals={false} />
-        <YAxis type="category" dataKey="name" width={118} tick={{ fill: "#7EC8A4", fontSize: 10 }} />
+        <CartesianGrid strokeDasharray="3 3" stroke={colors.line} />
+        <XAxis type="number" tick={{ fill: colors.purple, fontSize: 10 }} tickFormatter={v => classifMetric === `revenue` ? $(v).replace("$", "") : v} allowDecimals={false} />
+        <YAxis type="category" dataKey="name" width={118} tick={{ fill: colors.muted, fontSize: 10 }} />
         <Tooltip content={<ClassifTT />} />
         <Bar dataKey="value" radius={[0, 4, 4, 0]} name={classifMetric === "revenue" ? "Revenue" : "Pedidos"} cursor="pointer"
           onClick={(row) => row?.name && toggleClassif(dim, row.name)}>
-          {withTot.map((d, i) => <Cell key={i} fill={colors[d.name] || "#52B788"} opacity={!classifFilter || classifFilter.value === d.name ? 1 : 0.35} />)}
+          {withTot.map((d, i) => <Cell key={i} fill={colors[d.name] || colors.purple} opacity={!classifFilter || classifFilter.value === d.name ? 1 : 0.35} />)}
         </Bar>
       </BarChart>
     </ResponsiveContainer>
@@ -348,13 +349,13 @@ export default function Distribuidores({ orders = [] }) {
 
   const DistTable = ({ dists, emptyMsg, accentColor }) => (
     dists.length === 0
-      ? <div style={{ color: "#3A6A46", fontSize: 13, padding: "20px 0", textAlign: "center" }}>{emptyMsg}</div>
+      ? <div style={{ color: colors.muted, fontSize: 13, padding: "20px 0", textAlign: "center" }}>{emptyMsg}</div>
       : <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
           <thead>
-            <tr style={{ borderBottom: "1px solid #1A3520" }}>
+            <tr style={{ borderBottom: `1px solid ${colors.line}` }}>
               {["#", "Distribuidor", "Región", "Tier", "Pedidos", "Revenue", "Unidades"].map(h => (
-                <th key={h} style={{ color: "#5A8A66", fontWeight: 700, padding: "6px 10px", textAlign: "left", fontSize: 10, letterSpacing: 0.8 }}>{h.toUpperCase()}</th>
+                <th key={h} style={{ color: colors.muted, fontWeight: 700, padding: "6px 10px", textAlign: "left", fontSize: 10, letterSpacing: 0.8 }}>{h.toUpperCase()}</th>
               ))}
             </tr>
           </thead>
@@ -364,20 +365,20 @@ export default function Distribuidores({ orders = [] }) {
                 key={d._key}
                 onClick={() => setSelectedDist(selectedDist?._key === d._key ? null : d)}
                 style={{
-                  borderBottom: "1px solid #111E14",
-                  background: selectedDist?._key === d._key ? "#0F2A18" : "transparent",
+                  borderBottom: `1px solid ${colors.subtle}`,
+                  background: selectedDist?._key === d._key ? colors.paper : "transparent",
                   cursor: "pointer", transition: "background .1s",
                 }}
-                onMouseEnter={e => { if (selectedDist?._key !== d._key) e.currentTarget.style.background = "#0D1F14"; }}
+                onMouseEnter={e => { if (selectedDist?._key !== d._key) e.currentTarget.style.background = colors.subtle; }}
                 onMouseLeave={e => { if (selectedDist?._key !== d._key) e.currentTarget.style.background = "transparent"; }}
               >
-                <td style={{ padding: "8px 10px", color: "#3A6A46", fontWeight: 700 }}>{i + 1}</td>
-                <td style={{ padding: "8px 10px", color: "#E8F5EE", fontWeight: 600 }}>{d.nombre}</td>
-                <td style={{ padding: "8px 10px", color: "#7EC8A4", fontSize: 11 }}>{d.region}</td>
+                <td style={{ padding: "8px 10px", color: colors.muted, fontWeight: 700 }}>{i + 1}</td>
+                <td style={{ padding: "8px 10px", color: colors.ink, fontWeight: 600 }}>{d.nombre}</td>
+                <td style={{ padding: "8px 10px", color: colors.muted, fontSize: 11 }}>{d.region}</td>
                 <td style={{ padding: "8px 10px" }}><TierBadge tier={d.tier} /></td>
-                <td style={{ padding: "8px 10px", color: "#7EC8A4" }}>{d.pedidos}</td>
-                <td style={{ padding: "8px 10px", color: accentColor || "#52B788", fontWeight: 700 }}>{$(d.revenue)}</td>
-                <td style={{ padding: "8px 10px", color: "#5A8A66" }}>{N(d.unidades)}</td>
+                <td style={{ padding: "8px 10px", color: colors.muted }}>{d.pedidos}</td>
+                <td style={{ padding: "8px 10px", color: accentColor || colors.purple, fontWeight: 700 }}>{$(d.revenue)}</td>
+                <td style={{ padding: "8px 10px", color: colors.muted }}>{N(d.unidades)}</td>
               </tr>
             ))}
           </tbody>
@@ -407,36 +408,36 @@ export default function Distribuidores({ orders = [] }) {
           </button>
           <div style={{ fontSize: 20, fontWeight: 800, flex: 1 }}>{d.nombre}</div>
           <TierBadge tier={d.tier} size="lg" />
-          <span style={{ fontSize: 11, color: d.isNew ? "#52B788" : "#F0B429", fontWeight: 700, background: d.isNew ? "#0D2A18" : "#2A1F00", padding: "4px 10px", borderRadius: 6, border: `1px solid ${d.isNew ? "#1A5A2A" : "#7A5000"}` }}>
+          <span style={{ fontSize: 11, color: d.isNew ? colors.purple : colors.orange, fontWeight: 700, background: d.isNew ? colors.subtle : colors.orangeSoft, padding: "4px 10px", borderRadius: 6, border: `1px solid ${d.isNew ? colors.ok : colors.caution}` }}>
             {d.isNew ? "✦ NUEVO" : "⟳ FRECUENTE"}
           </span>
         </div>
 
         <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-          <KPI icon="💰" label="Revenue" value={$(d.revenue)} sub={`en ${mes}`} color="#52B788" />
-          <KPI icon="📦" label="Pedidos" value={d.pedidos} sub={`en ${mes}`} color="#7EC8A4" />
-          <KPI icon="📊" label="Unidades" value={N(d.unidades)} sub={`en ${mes}`} color="#5A8A66" />
-          <KPI icon="📅" label="1er Compra" value={d.firstPurchaseMonth} color="#F0B429" />
-          <KPI icon="🗂" label="Total Pedidos" value={totalHistorico} sub="histórico" color="#9B59B6" />
+          <KPI icon="💰" label="Revenue" value={$(d.revenue)} sub={`en ${mes}`} color={colors.purple} />
+          <KPI icon="📦" label="Pedidos" value={d.pedidos} sub={`en ${mes}`} color={colors.muted} />
+          <KPI icon="📊" label="Unidades" value={N(d.unidades)} sub={`en ${mes}`} color={colors.muted} />
+          <KPI icon="📅" label="1er Compra" value={d.firstPurchaseMonth} color={colors.orange} />
+          <KPI icon="🗂" label="Total Pedidos" value={totalHistorico} sub="histórico" color={colors.purple} />
         </div>
 
         {/* Info de contacto — todos los datos registrados del cliente */}
         {(d.telefonos?.length > 0 || d.emails?.length > 0 || d.nombres?.length > 1) && (
-          <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 10, padding: "10px 14px", marginBottom: 14, fontSize: 12 }}>
+          <div style={{ background: colors.paper, border: `1px solid ${colors.line}`, borderRadius: 10, padding: "10px 14px", marginBottom: 14, fontSize: 12 }}>
             {d.nombres?.length > 1 && (
-              <div style={{ marginBottom: 6, color: "#5A8A66" }}>
-                <span style={{ color: "#3A6A46", marginRight: 6 }}>También registrado como:</span>
+              <div style={{ marginBottom: 6, color: colors.muted }}>
+                <span style={{ color: colors.muted, marginRight: 6 }}>También registrado como:</span>
                 {d.nombres.slice(0, -1).map((n, i) => (
-                  <span key={i} style={{ color: "#7EC8A4", marginRight: 10 }}>{n}</span>
+                  <span key={i} style={{ color: colors.muted, marginRight: 10 }}>{n}</span>
                 ))}
               </div>
             )}
             <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
               {d.telefonos?.map((t, i) => (
-                <span key={i} style={{ color: "#7EC8A4" }}>📞 {t}</span>
+                <span key={i} style={{ color: colors.muted }}>📞 {t}</span>
               ))}
               {d.emails?.map((m, i) => (
-                <span key={i} style={{ color: "#7EC8A4" }}>✉ {m}</span>
+                <span key={i} style={{ color: colors.muted }}>✉ {m}</span>
               ))}
             </div>
           </div>
@@ -446,11 +447,11 @@ export default function Distribuidores({ orders = [] }) {
           <Chart title="Revenue Mensual">
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={histChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1A3520" />
-                <XAxis dataKey="label" tick={{ fill: "#4A7A56", fontSize: 10 }} />
-                <YAxis tick={{ fill: "#4A7A56", fontSize: 10 }} tickFormatter={v => $(v).replace("$", "")} />
+                <CartesianGrid strokeDasharray="3 3" stroke={colors.line} />
+                <XAxis dataKey="label" tick={{ fill: colors.purple, fontSize: 10 }} />
+                <YAxis tick={{ fill: colors.purple, fontSize: 10 }} tickFormatter={v => $(v).replace("$", "")} />
                 <Tooltip content={<TT />} />
-                <Bar dataKey="revenue" fill="#52B788" radius={[4, 4, 0, 0]} name="Revenue" />
+                <Bar dataKey="revenue" fill={colors.purple} radius={[4, 4, 0, 0]} name="Revenue" />
               </BarChart>
             </ResponsiveContainer>
           </Chart>
@@ -460,15 +461,15 @@ export default function Distribuidores({ orders = [] }) {
                 const t = getTier(m.revenue);
                 return (
                   <div key={m.mes} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                    <span style={{ color: "#5A8A66", fontSize: 11, minWidth: 60 }}>{m.label}</span>
-                    <div style={{ flex: 1, height: 24, background: "#0A1A0C", borderRadius: 6, overflow: "hidden" }}>
+                    <span style={{ color: colors.muted, fontSize: 11, minWidth: 60 }}>{m.label}</span>
+                    <div style={{ flex: 1, height: 24, background: colors.paper, borderRadius: 6, overflow: "hidden" }}>
                       <div style={{
                         height: "100%", background: t.color, opacity: 0.8,
                         width: `${Math.min(100, (m.revenue / 500000) * 100)}%`,
                         borderRadius: 6, transition: "width .3s",
                         display: "flex", alignItems: "center", paddingLeft: 8,
                       }}>
-                        <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", whiteSpace: "nowrap" }}>
+                        <span style={{ fontSize: 9, fontWeight: 700, color: colors.paper, whiteSpace: "nowrap" }}>
                           {t.icon} {t.label}
                         </span>
                       </div>
@@ -485,20 +486,20 @@ export default function Distribuidores({ orders = [] }) {
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
               <thead>
-                <tr style={{ borderBottom: "1px solid #1A3520" }}>
+                <tr style={{ borderBottom: `1px solid ${colors.line}` }}>
                   {["ID", "Fecha", "Región", "Unidades", "Total"].map(h => (
-                    <th key={h} style={{ color: "#5A8A66", fontWeight: 700, padding: "6px 10px", textAlign: "left", fontSize: 10, letterSpacing: 0.8 }}>{h}</th>
+                    <th key={h} style={{ color: colors.muted, fontWeight: 700, padding: "6px 10px", textAlign: "left", fontSize: 10, letterSpacing: 0.8 }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {d.orders.map(o => (
-                  <tr key={o.id} style={{ borderBottom: "1px solid #111E14" }}>
-                    <td style={{ padding: "8px 10px", color: "#3A6A46", fontWeight: 700 }}>{o.id}</td>
-                    <td style={{ padding: "8px 10px", color: "#7EC8A4" }}>{o.fecha}</td>
-                    <td style={{ padding: "8px 10px", color: "#5A8A66" }}>{o.region?.split("(")[0]?.trim()}</td>
-                    <td style={{ padding: "8px 10px", color: "#7EC8A4" }}>{N(o.totalUnidades)}</td>
-                    <td style={{ padding: "8px 10px", color: "#52B788", fontWeight: 700 }}>{$(o.totalPagar)}</td>
+                  <tr key={o.id} style={{ borderBottom: `1px solid ${colors.subtle}` }}>
+                    <td style={{ padding: "8px 10px", color: colors.muted, fontWeight: 700 }}>{o.id}</td>
+                    <td style={{ padding: "8px 10px", color: colors.muted }}>{o.fecha}</td>
+                    <td style={{ padding: `8px 10px`, color: colors.muted }}>{o.region?.split(`(`)[0]?.trim()}</td>
+                    <td style={{ padding: "8px 10px", color: colors.muted }}>{N(o.totalUnidades)}</td>
+                    <td style={{ padding: "8px 10px", color: colors.purple, fontWeight: 700 }}>{$(o.totalPagar)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -534,39 +535,39 @@ export default function Distribuidores({ orders = [] }) {
 
       {/* KPIs */}
       <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-        <KPI icon="👥" label="Total Distribuidores" value={N(kpis.total)} sub={`en ${mes}`} color="#52B788" />
-        <KPI icon="✦" label="Nuevos" value={N(kpis.nuevos)} sub={$(kpis.revenueNuevos)} color="#52B788" />
-        <KPI icon="⟳" label="Frecuentes" value={N(kpis.frecuentes)} sub={$(kpis.revenueFrecuentes)} color="#F0B429" />
-        <KPI icon="🏆" label="Tier Oro" value={N(kpis.byTier.oro)} sub="≥ $500.000/mes" color="#B8860B" />
-        <KPI icon="🥈" label="Tier Plata" value={N(kpis.byTier.plata)} sub="≥ $300.000/mes" color="#8EA8B8" />
-        <KPI icon="🌿" label="Tier Verde" value={N(kpis.byTier.verde)} sub="≥ $150.000/mes" color="#52B788" />
+        <KPI icon="👥" label="Total Distribuidores" value={N(kpis.total)} sub={`en ${mes}`} color={colors.purple} />
+        <KPI icon="✦" label="Nuevos" value={N(kpis.nuevos)} sub={$(kpis.revenueNuevos)} color={colors.purple} />
+        <KPI icon="⟳" label="Frecuentes" value={N(kpis.frecuentes)} sub={$(kpis.revenueFrecuentes)} color={colors.orange} />
+        <KPI icon="🏆" label="Tier Oro" value={N(kpis.byTier.oro)} sub="≥ $500.000/mes" color={tiers.oro.fg} />
+        <KPI icon="🥈" label="Tier Plata" value={N(kpis.byTier.plata)} sub="≥ $300.000/mes" color={tiers.plata.fg} />
+        <KPI icon="🌿" label="Tier Verde" value={N(kpis.byTier.verde)} sub="≥ $150.000/mes" color={colors.purple} />
       </div>
 
       {/* Análisis de crecimiento */}
-      <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 12, padding: "14px 18px", marginBottom: 14 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: "#5A8A66", letterSpacing: 1, marginBottom: 10 }}>
+      <div style={{ background: colors.paper, border: `1px solid ${colors.line}`, borderRadius: 12, padding: "14px 18px", marginBottom: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, letterSpacing: 1, marginBottom: 10 }}>
           📡 ANÁLISIS DE CRECIMIENTO — {mes}
         </div>
         <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
           <div style={{ flex: 1, minWidth: 220 }}>
-            <div style={{ fontSize: 12, color: "#7EC8A4", marginBottom: 6 }}>
+            <div style={{ fontSize: 12, color: colors.muted, marginBottom: 6 }}>
               ¿Cómo está creciendo el canal este período?
             </div>
-            <div style={{ fontSize: 13, color: "#E8F5EE", marginBottom: 8 }}>
+            <div style={{ fontSize: 13, color: colors.ink, marginBottom: 8 }}>
               {kpis.nuevos > kpis.frecuentes
-                ? <><span style={{ color: "#52B788", fontWeight: 700 }}>↑ Expansión de canal:</span> El crecimiento viene principalmente de <strong>{kpis.nuevos} distribuidores nuevos</strong> vs {kpis.frecuentes} frecuentes.</>
+                ? <><span style={{ color: colors.purple, fontWeight: 700 }}>↑ Expansión de canal:</span> El crecimiento viene principalmente de <strong>{kpis.nuevos} distribuidores nuevos</strong> vs {kpis.frecuentes} frecuentes.</>
                 : kpis.nuevos === 0
-                  ? <><span style={{ color: "#F0B429", fontWeight: 700 }}>⟳ Base consolidada:</span> Sin distribuidores nuevos. El canal depende de <strong>{kpis.frecuentes} distribuidores frecuentes</strong>.</>
-                  : <><span style={{ color: "#F0B429", fontWeight: 700 }}>⟳ Profundización:</span> El crecimiento viene de <strong>{kpis.frecuentes} distribuidores frecuentes</strong> comprando más ({kpis.nuevos} nuevos este mes).</>
+                  ? <><span style={{ color: colors.orange, fontWeight: 700 }}>⟳ Base consolidada:</span> Sin distribuidores nuevos. El canal depende de <strong>{kpis.frecuentes} distribuidores frecuentes</strong>.</>
+                  : <><span style={{ color: colors.orange, fontWeight: 700 }}>⟳ Profundización:</span> El crecimiento viene de <strong>{kpis.frecuentes} distribuidores frecuentes</strong> comprando más ({kpis.nuevos} nuevos este mes).</>
               }
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <div style={{ flex: kpis.revenueNuevos, background: "#1A5A2A", borderRadius: 4, height: 10, transition: "flex .4s" }} title={`Nuevos: ${$(kpis.revenueNuevos)}`} />
-              <div style={{ flex: kpis.revenueFrecuentes, background: "#7A5000", borderRadius: 4, height: 10, transition: "flex .4s" }} title={`Frecuentes: ${$(kpis.revenueFrecuentes)}`} />
+              <div style={{ flex: kpis.revenueNuevos, background: colors.ok, borderRadius: 4, height: 10, transition: "flex .4s" }} title={`Nuevos: ${$(kpis.revenueNuevos)}`} />
+              <div style={{ flex: kpis.revenueFrecuentes, background: colors.caution, borderRadius: 4, height: 10, transition: "flex .4s" }} title={`Frecuentes: ${$(kpis.revenueFrecuentes)}`} />
             </div>
-            <div style={{ display: "flex", gap: 16, marginTop: 5, fontSize: 10, color: "#5A8A66" }}>
-              <span style={{ color: "#52B788" }}>● Nuevos {growthPct}%</span>
-              <span style={{ color: "#F0B429" }}>● Frecuentes {(100 - parseFloat(growthPct)).toFixed(1)}%</span>
+            <div style={{ display: "flex", gap: 16, marginTop: 5, fontSize: 10, color: colors.muted }}>
+              <span style={{ color: colors.purple }}>● Nuevos {growthPct}%</span>
+              <span style={{ color: colors.orange }}>● Frecuentes {(100 - parseFloat(growthPct)).toFixed(1)}%</span>
             </div>
           </div>
           <div style={{ width: 160 }}>
@@ -576,8 +577,8 @@ export default function Distribuidores({ orders = [] }) {
                   { name: "Nuevos", v: kpis.revenueNuevos || 0.01 },
                   { name: "Frecuentes", v: kpis.revenueFrecuentes || 0.01 },
                 ]} dataKey="v" innerRadius={28} outerRadius={45}>
-                  <Cell fill="#52B788" />
-                  <Cell fill="#F0B429" />
+                  <Cell fill={colors.purple} />
+                  <Cell fill={colors.orange} />
                 </Pie>
                 <Tooltip formatter={v => $(v)} />
               </PieChart>
@@ -585,7 +586,7 @@ export default function Distribuidores({ orders = [] }) {
           </div>
           {tierPieData.length > 0 && (
             <div style={{ width: 160 }}>
-              <div style={{ fontSize: 10, color: "#5A8A66", marginBottom: 4, textAlign: "center" }}>POR TIER</div>
+              <div style={{ fontSize: 10, color: colors.muted, marginBottom: 4, textAlign: "center" }}>POR TIER</div>
               <ResponsiveContainer width="100%" height={100}>
                 <PieChart>
                   <Pie data={tierPieData} dataKey="v" innerRadius={28} outerRadius={45}>
@@ -594,7 +595,7 @@ export default function Distribuidores({ orders = [] }) {
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
-              <div style={{ fontSize: 9, color: "#4A7A56", textAlign: "center" }}>
+              <div style={{ fontSize: 9, color: colors.purple, textAlign: "center" }}>
                 {tierPieData.map(t => <span key={t.name} style={{ marginRight: 6, color: t.color }}>● {t.name}</span>)}
               </div>
             </div>
@@ -604,38 +605,38 @@ export default function Distribuidores({ orders = [] }) {
 
       {/* Tendencia mensual */}
       <div style={{ marginBottom: 14 }}>
-        <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 12, padding: "14px 16px" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#5A8A66", letterSpacing: 1, marginBottom: 10 }}>TENDENCIA — NUEVOS VS FRECUENTES</div>
+        <div style={{ background: colors.paper, border: `1px solid ${colors.line}`, borderRadius: 12, padding: "14px 16px" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, letterSpacing: 1, marginBottom: 10 }}>TENDENCIA — NUEVOS VS FRECUENTES</div>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={trendData} onClick={(state) => {
               const row = state?.activePayload?.[0]?.payload;
               if (row?.mes) setMes(row.mes);
             }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1A3520" />
-              <XAxis dataKey="label" tick={{ fill: "#4A7A56", fontSize: 10 }} />
-              <YAxis tick={{ fill: "#4A7A56", fontSize: 10 }} allowDecimals={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={colors.line} />
+              <XAxis dataKey="label" tick={{ fill: colors.purple, fontSize: 10 }} />
+              <YAxis tick={{ fill: colors.purple, fontSize: 10 }} allowDecimals={false} />
               <Tooltip content={<TT />} />
-              <Legend iconSize={8} wrapperStyle={{ fontSize: 10, color: "#5A8A66" }} />
-              <Bar dataKey="nuevos" fill="#52B788" radius={[3, 3, 0, 0]} name="Nuevos" stackId="a" />
-              <Bar dataKey="frecuentes" fill="#F0B429" radius={[3, 3, 0, 0]} name="Frecuentes" stackId="a" />
+              <Legend iconSize={8} wrapperStyle={{ fontSize: 10, color: colors.muted }} />
+              <Bar dataKey="nuevos" fill={colors.purple} radius={[3, 3, 0, 0]} name="Nuevos" stackId="a" />
+              <Bar dataKey="frecuentes" fill={colors.orange} radius={[3, 3, 0, 0]} name="Frecuentes" stackId="a" />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* Clasificación comercial */}
-      <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 12, padding: "14px 16px", marginBottom: 14 }}>
+      <div style={{ background: colors.paper, border: `1px solid ${colors.line}`, borderRadius: 12, padding: "14px 16px", marginBottom: 14 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#5A8A66", letterSpacing: 1, flex: 1 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, letterSpacing: 1, flex: 1 }}>
             CLASIFICACIÓN COMERCIAL — PERFIL, ORIGEN Y CANAL
           </div>
           <div style={{ display: "flex", gap: 6 }}>
             {[["pedidos", "Pedidos"], ["revenue", "Revenue"]].map(([id, label]) => (
               <button key={id} type="button" onClick={() => setClassifMetric(id)}
                 style={{
-                  background: classifMetric === id ? "#1A5E2A" : "transparent",
-                  color: classifMetric === id ? "#fff" : "#7EC8A4",
-                  border: "1px solid #2D5A3A", borderRadius: 7, padding: "5px 10px",
+                  background: classifMetric === id ? colors.ink : "transparent",
+                  color: classifMetric === id ? colors.paper : colors.muted,
+                  border: `1px solid ${colors.line}`, borderRadius: 7, padding: "5px 10px",
                   fontSize: 11, fontWeight: 700, cursor: "pointer",
                 }}>
                 {label}
@@ -643,48 +644,48 @@ export default function Distribuidores({ orders = [] }) {
             ))}
           </div>
         </div>
-        <div style={{ fontSize: 12, color: "#7EC8A4", marginBottom: 8 }}>
+        <div style={{ fontSize: 12, color: colors.muted, marginBottom: 8 }}>
           Click en un mes para cambiar el período. Click en una categoría para filtrar tablas y gráficos.
         </div>
         {classifFilter && (
           <div style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 11, background: "#1A5E2A", color: "#E8F5EE", borderRadius: 6, padding: "4px 8px" }}>
+            <span style={{ fontSize: 11, background: colors.ink, color: colors.ink, borderRadius: 6, padding: "4px 8px" }}>
               Filtro: {classifFilter.dim} · {classifFilter.value}
             </span>
             <button type="button" onClick={() => setClassifFilter(null)}
-              style={{ background: "transparent", border: "1px solid #3A6A46", color: "#7EC8A4", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontSize: 11 }}>
+              style={{ background: "transparent", border: `1px solid ${colors.muted}`, color: colors.muted, borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontSize: 11 }}>
               Quitar filtro
             </button>
           </div>
         )}
         <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14 }}>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "#52B788", letterSpacing: 1, marginBottom: 6 }}>PERFIL DE DISTRIBUIDOR · ÚLTIMOS MESES</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: colors.purple, letterSpacing: 1, marginBottom: 6 }}>PERFIL DE DISTRIBUIDOR · ÚLTIMOS MESES</div>
             <StackedMonthChart data={classifCharts.perfilTrend} keys={PERFIL_KEYS} colors={PERFIL_COLORS} dim="perfil" />
           </div>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "#52B788", letterSpacing: 1, marginBottom: 6 }}>ORIGEN DEL PEDIDO · ÚLTIMOS MESES</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: colors.purple, letterSpacing: 1, marginBottom: 6 }}>ORIGEN DEL PEDIDO · ÚLTIMOS MESES</div>
             <StackedMonthChart data={classifCharts.origenTrend} keys={ORIGEN_KEYS} colors={ORIGEN_COLORS} dim="origen" />
           </div>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "#52B788", letterSpacing: 1, marginBottom: 6 }}>CANAL DE ADQUISICIÓN · LEADS NUEVOS · ÚLTIMOS MESES</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: colors.purple, letterSpacing: 1, marginBottom: 6 }}>CANAL DE ADQUISICIÓN · LEADS NUEVOS · ÚLTIMOS MESES</div>
             <StackedMonthChart data={classifCharts.canalTrend} keys={CANAL_KEYS} colors={CANAL_COLORS} dim="canal" />
           </div>
         </div>
-        <div style={{ fontSize: 10, fontWeight: 700, color: "#5A8A66", letterSpacing: 1, margin: "16px 0 8px" }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: colors.muted, letterSpacing: 1, margin: "16px 0 8px" }}>
           COMPOSICIÓN EN {mes} · {classifMetric === "revenue" ? "REVENUE" : "PEDIDOS"}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
           <div>
-            <div style={{ fontSize: 10, color: "#7EC8A4", marginBottom: 4 }}>Perfil</div>
+            <div style={{ fontSize: 10, color: colors.muted, marginBottom: 4 }}>Perfil</div>
             <MonthMixChart data={classifCharts.perfilMes} colors={PERFIL_COLORS} dim="perfil" />
           </div>
           <div>
-            <div style={{ fontSize: 10, color: "#7EC8A4", marginBottom: 4 }}>Origen</div>
+            <div style={{ fontSize: 10, color: colors.muted, marginBottom: 4 }}>Origen</div>
             <MonthMixChart data={classifCharts.origenMes} colors={ORIGEN_COLORS} dim="origen" />
           </div>
           <div>
-            <div style={{ fontSize: 10, color: "#7EC8A4", marginBottom: 4 }}>Canal {classifCharts.leadsCount ? `(${classifCharts.leadsCount} leads)` : "(sin leads)"}</div>
+            <div style={{ fontSize: 10, color: colors.muted, marginBottom: 4 }}>Canal {classifCharts.leadsCount ? `(${classifCharts.leadsCount} leads)` : "(sin leads)"}</div>
             <MonthMixChart data={classifCharts.canalMes} colors={CANAL_COLORS} dim="canal" />
           </div>
         </div>
@@ -692,32 +693,32 @@ export default function Distribuidores({ orders = [] }) {
 
       {/* Tablas nuevo vs frecuente */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        <div style={{ background: "#0D1F12", border: "1px solid #1A5A2A", borderRadius: 12, padding: "14px 16px" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#52B788", letterSpacing: 1, marginBottom: 2 }}>
+        <div style={{ background: colors.paper, border: `1px solid ${colors.ok}`, borderRadius: 12, padding: "14px 16px" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: colors.purple, letterSpacing: 1, marginBottom: 2 }}>
             ✦ DISTRIBUIDORES NUEVOS — {mes}
           </div>
-          <div style={{ fontSize: 10, color: "#3A6A46", marginBottom: 10 }}>
+          <div style={{ fontSize: 10, color: colors.muted, marginBottom: 10 }}>
             Primera compra registrada en este período · {newDist.length} distribuidores
           </div>
-          <DistTable dists={newDist} emptyMsg="No hay distribuidores nuevos en este período" accentColor="#52B788" />
+          <DistTable dists={newDist} emptyMsg="No hay distribuidores nuevos en este período" accentColor={colors.purple} />
         </div>
-        <div style={{ background: "#0D1F12", border: "1px solid #7A5000", borderRadius: 12, padding: "14px 16px" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#F0B429", letterSpacing: 1, marginBottom: 2 }}>
+        <div style={{ background: colors.paper, border: `1px solid ${colors.caution}`, borderRadius: 12, padding: "14px 16px" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: colors.orange, letterSpacing: 1, marginBottom: 2 }}>
             ⟳ DISTRIBUIDORES FRECUENTES — {mes}
           </div>
-          <div style={{ fontSize: 10, color: "#5A4020", marginBottom: 10 }}>
+          <div style={{ fontSize: 10, color: colors.caution, marginBottom: 10 }}>
             Clientes con historial previo al período · {frecDist.length} distribuidores
           </div>
-          <DistTable dists={frecDist} emptyMsg="No hay distribuidores frecuentes en este período" accentColor="#F0B429" />
+          <DistTable dists={frecDist} emptyMsg="No hay distribuidores frecuentes en este período" accentColor={colors.orange} />
         </div>
       </div>
 
       {/* Tabla completa */}
       {filtered.length > 0 && (
-        <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 12, padding: "14px 16px", marginTop: 14 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#5A8A66", letterSpacing: 1, marginBottom: 10 }}>
+        <div style={{ background: colors.paper, border: `1px solid ${colors.line}`, borderRadius: 12, padding: "14px 16px", marginTop: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, letterSpacing: 1, marginBottom: 10 }}>
             TODOS LOS DISTRIBUIDORES — {mes} {selectedTier !== "todos" ? `· TIER ${selectedTier.toUpperCase()}` : ""}
-            <span style={{ fontSize: 10, fontWeight: 400, marginLeft: 10, color: "#3A6A46" }}>Haz clic en un distribuidor para ver su detalle</span>
+            <span style={{ fontSize: 10, fontWeight: 400, marginLeft: 10, color: colors.muted }}>Haz clic en un distribuidor para ver su detalle</span>
           </div>
           <DistTable dists={filtered} emptyMsg="Sin datos para este filtro" />
         </div>

@@ -10,6 +10,7 @@ export function middleware(request) {
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/geo") ||
+    pathname.startsWith("/brand") ||
     pathname === "/favicon.ico";
  
   if (isPublic) return NextResponse.next();

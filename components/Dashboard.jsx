@@ -1,10 +1,11 @@
+import { colors, tiers } from "../lib/theme.js";
 // components/Dashboard.jsx
 import { useState, useMemo } from "react";
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
          XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { $, N, P, PIE_COLORS, PRODUCTS as FALLBACK_PRODUCTS } from "../lib/constants";
 
-const selStyle = { background: "#0D1F12", border: "1px solid #1A3520", color: "#E8F5EE", padding: "8px 12px", borderRadius: 8, fontSize: 13, cursor: "pointer" };
+const selStyle = { background: colors.paper, border: `1px solid ${colors.line}`, color: colors.ink, padding: "8px 12px", borderRadius: 8, fontSize: 13, cursor: "pointer" };
 
 const parseDate = (fechaRaw) => {
   if (!fechaRaw) return { month: "", day: "" };
@@ -138,27 +139,27 @@ export default function Dashboard({ orders = [], syncing = false, products: prop
   const regData = Object.entries(regMap).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([n, v]) => ({ name: n, v }));
   const allVendors = ["Todos", ...new Set(orders.map(o => o.vendedor).filter(Boolean))];
 
-  const KPI = ({ icon, label, value, sub, color = "#52B788" }) => (
-    <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 12, padding: "16px 18px", flex: 1, minWidth: 130 }}>
-      <div style={{ fontSize: 10, color: "#5A8A66", fontWeight: 700, letterSpacing: 1, marginBottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
+  const KPI = ({ icon, label, value, sub, color = colors.purple }) => (
+    <div style={{ background: colors.paper, border: `1px solid ${colors.line}`, borderRadius: 12, padding: "16px 18px", flex: 1, minWidth: 130 }}>
+      <div style={{ fontSize: 10, color: colors.muted, fontWeight: 700, letterSpacing: 1, marginBottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
         <span style={{ fontSize: 16 }}>{icon}</span>{label.toUpperCase()}
       </div>
       <div style={{ fontSize: 24, fontWeight: 800, color, lineHeight: 1.1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: "#4A7A56", marginTop: 5 }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 11, color: colors.purple, marginTop: 5 }}>{sub}</div>}
     </div>
   );
 
   const Chart = ({ title, children }) => (
-    <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 12, padding: "16px 18px" }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: "#5A8A66", letterSpacing: 1, marginBottom: 12 }}>{title.toUpperCase()}</div>
+    <div style={{ background: colors.paper, border: `1px solid ${colors.line}`, borderRadius: 12, padding: "16px 18px" }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, letterSpacing: 1, marginBottom: 12 }}>{title.toUpperCase()}</div>
       {children}
     </div>
   );
 
   const TT = ({ active, payload, label }) => active && payload?.length ? (
-    <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 8, padding: "8px 12px", fontSize: 12 }}>
-      <div style={{ color: "#5A8A66", marginBottom: 4 }}>{label}</div>
-      {payload.map((p, i) => <div key={i} style={{ color: p.color || "#52B788", fontWeight: 700 }}>{p.name}: {$(p.value)}</div>)}
+    <div style={{ background: colors.paper, border: `1px solid ${colors.line}`, borderRadius: 8, padding: "8px 12px", fontSize: 12 }}>
+      <div style={{ color: colors.muted, marginBottom: 4 }}>{label}</div>
+      {payload.map((p, i) => <div key={i} style={{ color: p.color || colors.purple, fontWeight: 700 }}>{p.name}: {$(p.value)}</div>)}
     </div>
   ) : null;
 
@@ -175,22 +176,22 @@ export default function Dashboard({ orders = [], syncing = false, products: prop
       </div>
 
       <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-        <KPI icon="💰" label="Revenue Bruto" value={$(rev)} sub={`${nPed} pedidos`} color="#52B788" />
-        <KPI icon="📈" label="Gross Profit" value={$(gross)} sub={`Margen ${P(margin)}`} color="#F0B429" />
-        <KPI icon="📦" label="Unidades" value={N(units)} sub={`Ticket ${$(ticket)}`} color="#7EC8A4" />
-        <KPI icon="🏆" label="Top Región" value={topReg} sub={$(regMap[topReg] || 0)} color="#E87040" />
-        <KPI icon="📊" label="Total BBDD" value={N(processedOrders.length)} sub="pedidos históricos" color="#7A9B84" />
+        <KPI icon="💰" label="Revenue Bruto" value={$(rev)} sub={`${nPed} pedidos`} color={colors.purple} />
+        <KPI icon="📈" label="Gross Profit" value={$(gross)} sub={`Margen ${P(margin)}`} color={colors.orange} />
+        <KPI icon="📦" label="Unidades" value={N(units)} sub={`Ticket ${$(ticket)}`} color={colors.muted} />
+        <KPI icon="🏆" label="Top Región" value={topReg} sub={$(regMap[topReg] || 0)} color={colors.orange} />
+        <KPI icon="📊" label="Total BBDD" value={N(processedOrders.length)} sub="pedidos históricos" color={colors.muted} />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 14, marginBottom: 14 }}>
         <Chart title={`Ventas Diarias — ${mes}`}>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1A3520" />
-              <XAxis dataKey="dia" tick={{ fill: "#4A7A56", fontSize: 10 }} />
-              <YAxis tick={{ fill: "#4A7A56", fontSize: 10 }} tickFormatter={v => $(v).replace("$", "")} />
+              <CartesianGrid strokeDasharray="3 3" stroke={colors.line} />
+              <XAxis dataKey="dia" tick={{ fill: colors.purple, fontSize: 10 }} />
+              <YAxis tick={{ fill: colors.purple, fontSize: 10 }} tickFormatter={v => $(v).replace("$", "")} />
               <Tooltip content={<TT />} />
-              <Area type="monotone" dataKey="ventas" stroke="#52B788" fill="#52B788" fillOpacity={0.1} strokeWidth={2} />
+              <Area type="monotone" dataKey="ventas" stroke={colors.purple} fill={colors.purple} fillOpacity={0.1} strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </Chart>
@@ -211,24 +212,24 @@ export default function Dashboard({ orders = [], syncing = false, products: prop
         <Chart title="Tendencia Mensual">
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={monthData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1A3520" />
-              <XAxis dataKey="label" tick={{ fill: "#4A7A56", fontSize: 10 }} />
-              <YAxis tick={{ fill: "#4A7A56", fontSize: 10 }} tickFormatter={v => $(v).replace("$", "")} />
+              <CartesianGrid strokeDasharray="3 3" stroke={colors.line} />
+              <XAxis dataKey="label" tick={{ fill: colors.purple, fontSize: 10 }} />
+              <YAxis tick={{ fill: colors.purple, fontSize: 10 }} tickFormatter={v => $(v).replace("$", "")} />
               <Tooltip content={<TT />} />
-              <Legend iconSize={8} wrapperStyle={{ fontSize: 10, color: "#5A8A66" }} />
-              <Line type="monotone" dataKey="rev" stroke="#52B788" strokeWidth={2} dot={{ r: 3, fill: "#52B788" }} name="Revenue" />
-              <Line type="monotone" dataKey="profit" stroke="#F0B429" strokeWidth={2} dot={{ r: 3, fill: "#F0B429" }} strokeDasharray="5 5" name="Gross Profit" />
+              <Legend iconSize={8} wrapperStyle={{ fontSize: 10, color: colors.muted }} />
+              <Line type="monotone" dataKey="rev" stroke={colors.purple} strokeWidth={2} dot={{ r: 3, fill: colors.purple }} name="Revenue" />
+              <Line type="monotone" dataKey="profit" stroke={colors.orange} strokeWidth={2} dot={{ r: 3, fill: colors.orange }} strokeDasharray="5 5" name="Gross Profit" />
             </LineChart>
           </ResponsiveContainer>
         </Chart>
         <Chart title="Top SKUs — Revenue">
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={skuData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#1A3520" horizontal={false} />
-              <XAxis type="number" tick={{ fill: "#4A7A56", fontSize: 9 }} tickFormatter={v => $(v).replace("$", "")} />
-              <YAxis type="category" dataKey="name" tick={{ fill: "#7EC8A4", fontSize: 9 }} width={110} />
+              <CartesianGrid strokeDasharray="3 3" stroke={colors.line} horizontal={false} />
+              <XAxis type="number" tick={{ fill: colors.purple, fontSize: 9 }} tickFormatter={v => $(v).replace(`$`, "")} />
+              <YAxis type="category" dataKey="name" tick={{ fill: colors.muted, fontSize: 9 }} width={110} />
               <Tooltip content={<TT />} />
-              <Bar dataKey="v" fill="#2E7D52" radius={[0, 4, 4, 0]} name="Revenue" />
+              <Bar dataKey="v" fill={colors.ok} radius={[0, 4, 4, 0]} name="Revenue" />
             </BarChart>
           </ResponsiveContainer>
         </Chart>
@@ -236,13 +237,13 @@ export default function Dashboard({ orders = [], syncing = false, products: prop
 
       {/* ── TOP 10 DISTRIBUIDORES ── */}
       {(() => {
-        const TIER_COLORS = { oro: "#B8860B", plata: "#8EA8B8", verde: "#52B788", sin: "#4A5568" };
+        const TIER_COLORS = { oro: tiers.oro.fg, plata: tiers.plata.fg, verde: colors.purple, sin: tiers.sin.fg };
         const TIER_ICONS  = { oro: "🏆", plata: "🥈", verde: "🌿", sin: "–" };
         const getTierDash = (rev) => {
-          if (rev >= 500000) return { id: "oro",   label: "ORO",   color: "#B8860B" };
-          if (rev >= 300000) return { id: "plata", label: "PLATA", color: "#8EA8B8" };
-          if (rev >= 150000) return { id: "verde", label: "VERDE", color: "#52B788" };
-          return { id: "sin", label: "S/T", color: "#4A5568" };
+          if (rev >= 500000) return { id: "oro",   label: "ORO",   color: tiers.oro.fg };
+          if (rev >= 300000) return { id: "plata", label: "PLATA", color: tiers.plata.fg };
+          if (rev >= 150000) return { id: "verde", label: "VERDE", color: colors.purple };
+          return { id: "sin", label: "S/T", color: tiers.sin.fg };
         };
         const distMap = {};
         filteredOrders.forEach(o => {
@@ -259,14 +260,14 @@ export default function Dashboard({ orders = [], syncing = false, products: prop
           <Chart title={`Top 10 Distribuidores — ${mes}`}>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={top10.map(d => ({ name: d.nombre.length > 18 ? d.nombre.slice(0, 17) + "…" : d.nombre, v: d.rev, tier: d.tier.id }))} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#1A3520" horizontal={false} />
-                <XAxis type="number" tick={{ fill: "#4A7A56", fontSize: 9 }} tickFormatter={v => $(v).replace("$", "")} />
-                <YAxis type="category" dataKey="name" tick={{ fill: "#7EC8A4", fontSize: 9 }} width={130} />
+                <CartesianGrid strokeDasharray="3 3" stroke={colors.line} horizontal={false} />
+                <XAxis type="number" tick={{ fill: colors.purple, fontSize: 9 }} tickFormatter={v => $(v).replace(`$`, "")} />
+                <YAxis type="category" dataKey="name" tick={{ fill: colors.muted, fontSize: 9 }} width={130} />
                 <Tooltip content={({ active, payload, label }) => active && payload?.length ? (
-                  <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 8, padding: "8px 12px", fontSize: 12 }}>
-                    <div style={{ color: "#5A8A66", marginBottom: 4 }}>{label}</div>
-                    <div style={{ color: "#52B788", fontWeight: 700 }}>Revenue: {$(payload[0].value)}</div>
-                    <div style={{ color: TIER_COLORS[payload[0].payload.tier] || "#52B788", fontSize: 10 }}>
+                  <div style={{ background: colors.paper, border: `1px solid ${colors.line}`, borderRadius: 8, padding: "8px 12px", fontSize: 12 }}>
+                    <div style={{ color: colors.muted, marginBottom: 4 }}>{label}</div>
+                    <div style={{ color: colors.purple, fontWeight: 700 }}>Revenue: {$(payload[0].value)}</div>
+                    <div style={{ color: TIER_COLORS[payload[0].payload.tier] || colors.purple, fontSize: 10 }}>
                       Tier: {TIER_ICONS[payload[0].payload.tier]} {payload[0].payload.tier.toUpperCase()}
                     </div>
                   </div>
@@ -276,11 +277,11 @@ export default function Dashboard({ orders = [], syncing = false, products: prop
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-            <div style={{ display: "flex", gap: 16, marginTop: 6, fontSize: 10, color: "#5A8A66", justifyContent: "flex-end" }}>
-              <span style={{ color: "#B8860B" }}>🏆 Oro ≥$500k</span>
-              <span style={{ color: "#8EA8B8" }}>🥈 Plata ≥$300k</span>
-              <span style={{ color: "#52B788" }}>🌿 Verde ≥$150k</span>
-              <span style={{ color: "#4A5568" }}>– Sin tier</span>
+            <div style={{ display: `flex`, gap: 16, marginTop: 6, fontSize: 10, color: colors.muted, justifyContent: `flex-end` }}>
+              <span style={{ color: tiers.oro.fg }}>🏆 Oro ≥$500k</span>
+              <span style={{ color: tiers.plata.fg }}>🥈 Plata ≥$300k</span>
+              <span style={{ color: colors.purple }}>🌿 Verde ≥$150k</span>
+              <span style={{ color: tiers.sin.fg }}>– Sin tier</span>
             </div>
           </Chart>
         );

@@ -15,6 +15,7 @@
   "dependencies": {
     "google-auth-library": "^9.14.2",
     "google-spreadsheet": "^4.1.4",
+    "html-to-image": "^1.11.13",
     "next": "^15.5.18",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",

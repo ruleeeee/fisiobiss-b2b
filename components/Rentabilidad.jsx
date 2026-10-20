@@ -1,11 +1,12 @@
+import { colors } from "../lib/theme.js";
 // components/Rentabilidad.jsx
 import { useState, useMemo } from "react";
 import { $, N, P, PRODUCTS as FALLBACK_PRODUCTS } from "../lib/constants";
 
-const selStyle={background:"#0D1F12",border:"1px solid #1A3520",color:"#E8F5EE",padding:"8px 12px",borderRadius:8,fontSize:13,cursor:"pointer"};
-const inpStyle={background:"#0A1A0C",border:"1px solid #1A3520",color:"#90CBF9",padding:"9px 12px",borderRadius:8,fontSize:13,width:"100%",boxSizing:"border-box"};
-const labelSt={fontSize:10,color:"#5A8A66",fontWeight:700,letterSpacing:1,marginBottom:4,display:"block"};
-const card={background:"#0D1F12",border:"1px solid #1A3520",borderRadius:12,padding:"18px 20px",marginBottom:14};
+const selStyle={background:colors.paper,border:`1px solid ${colors.line}`,color:colors.ink,padding:"8px 12px",borderRadius:8,fontSize:13,cursor:"pointer"};
+const inpStyle={background:colors.paper,border:`1px solid ${colors.line}`,color:colors.ink,padding:"9px 12px",borderRadius:8,fontSize:13,width:"100%",boxSizing:"border-box"};
+const labelSt={fontSize:10,color:colors.muted,fontWeight:700,letterSpacing:1,marginBottom:4,display:"block"};
+const card={background:colors.paper,border:`1px solid ${colors.line}`,borderRadius:12,padding:"18px 20px",marginBottom:14};
 
 const parseDate = (fechaRaw) => {
   if (!fechaRaw) return { month: "", day: "" };
@@ -107,9 +108,9 @@ export default function Rentabilidad({ orders: allOrders, products: propProducts
   })).sort((a,b) => b.profit - a.profit);
 
   const Row = ({ l, v, h }) => (
-    <div style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:"1px solid #0D1A0F",fontSize:13}}>
-      <span style={{color:"#5A8A66"}}>{l}</span>
-      <span style={{fontWeight:700,color:h?"#52B788":"#E8F5EE"}}>{v}</span>
+    <div style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:`1px solid ${colors.subtle}`,fontSize:13}}>
+      <span style={{color:colors.muted}}>{l}</span>
+      <span style={{fontWeight:700,color:h?colors.purple:colors.ink}}>{v}</span>
     </div>
   );
 
@@ -125,7 +126,7 @@ export default function Rentabilidad({ orders: allOrders, products: propProducts
 
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
         <div style={card}>
-          <div style={{fontSize:10,fontWeight:700,color:"#52B788",letterSpacing:1,marginBottom:14}}>COSTOS VARIABLES (ingreso manual)</div>
+          <div style={{fontSize:10,fontWeight:700,color:colors.purple,letterSpacing:1,marginBottom:14}}>COSTOS VARIABLES (ingreso manual)</div>
           <div style={{marginBottom:10}}>
             <label style={labelSt}>Inversión Publicitaria (CLP)</label>
             <input type="number" value={publi} onChange={e=>setPubli(+e.target.value||0)} style={inpStyle} placeholder="0"/>
@@ -135,15 +136,15 @@ export default function Rentabilidad({ orders: allOrders, products: propProducts
             <input type="number" value={otros} onChange={e=>setOtros(+e.target.value||0)} style={inpStyle} placeholder="0"/>
           </div>
           {publi>0&&(
-            <div style={{marginTop:14,padding:12,background:"rgba(240,180,41,.06)",borderRadius:8,border:"1px solid #2A3A1A"}}>
-              <div style={{fontSize:10,color:"#5A8A66",letterSpacing:1,marginBottom:4}}>ROAS</div>
-              <div style={{fontSize:28,fontWeight:800,color:"#F0B429"}}>{roas.toFixed(1)}x</div>
+            <div style={{marginTop:14,padding:12,background:"rgba(240,180,41,.06)",borderRadius:8,border:`1px solid ${colors.line}`}}>
+              <div style={{fontSize:10,color:colors.muted,letterSpacing:1,marginBottom:4}}>ROAS</div>
+              <div style={{fontSize:28,fontWeight:800,color:colors.orange}}>{roas.toFixed(1)}x</div>
             </div>
           )}
         </div>
 
         <div style={card}>
-          <div style={{fontSize:10,fontWeight:700,color:"#52B788",letterSpacing:1,marginBottom:12}}>P&L — {mes||"Histórico"}</div>
+          <div style={{fontSize:10,fontWeight:700,color:colors.purple,letterSpacing:1,marginBottom:12}}>P&L — {mes||"Histórico"}</div>
           <Row l="Revenue Bruto (c/IVA)" v={$(revB)}/>
           <Row l="Revenue Neto (s/IVA)" v={$(revN)}/>
           <Row l={`− COGS (${nPed} pedidos)`} v={`(${$(cogs)})`}/>
@@ -153,16 +154,16 @@ export default function Rentabilidad({ orders: allOrders, products: propProducts
           {otros>0&&<Row l="− Otros Costos" v={`(${$(otros)})`}/>}
           <div style={{padding:"12px 0",display:"flex",justifyContent:"space-between",fontSize:17,fontWeight:800}}>
             <span>= GANANCIA NETA</span>
-            <span style={{color:netto>=0?"#52B788":"#E87040"}}>{$(netto)} — {P(mN)}</span>
+            <span style={{color:netto>=0?colors.purple:colors.orange}}>{$(netto)} — {P(mN)}</span>
           </div>
           <div style={{display:"flex",gap:12,marginTop:6}}>
-            <div style={{flex:1,background:"rgba(82,183,136,.07)",borderRadius:8,padding:"10px",textAlign:"center"}}>
-              <div style={{fontSize:9,color:"#3A6A46",marginBottom:3,letterSpacing:1}}>POR PEDIDO</div>
-              <div style={{fontSize:15,fontWeight:800,color:"#F0B429"}}>{$(nPed?netto/nPed:0)}</div>
+            <div style={{flex:1,background:colors.purpleSoft,borderRadius:8,padding:"10px",textAlign:"center"}}>
+              <div style={{fontSize:9,color:colors.muted,marginBottom:3,letterSpacing:1}}>POR PEDIDO</div>
+              <div style={{fontSize:15,fontWeight:800,color:colors.orange}}>{$(nPed?netto/nPed:0)}</div>
             </div>
-            <div style={{flex:1,background:"rgba(82,183,136,.07)",borderRadius:8,padding:"10px",textAlign:"center"}}>
-              <div style={{fontSize:9,color:"#3A6A46",marginBottom:3,letterSpacing:1}}>MARGEN NETO</div>
-              <div style={{fontSize:15,fontWeight:800,color:mN>=0.4?"#52B788":mN>=0.2?"#F0B429":"#E87040"}}>{P(mN)}</div>
+            <div style={{flex:1,background:colors.purpleSoft,borderRadius:8,padding:"10px",textAlign:"center"}}>
+              <div style={{fontSize:9,color:colors.muted,marginBottom:3,letterSpacing:1}}>MARGEN NETO</div>
+              <div style={{fontSize:15,fontWeight:800,color:mN>=0.4?colors.purple:mN>=0.2?colors.orange:colors.orange}}>{P(mN)}</div>
             </div>
           </div>
         </div>
@@ -170,24 +171,24 @@ export default function Rentabilidad({ orders: allOrders, products: propProducts
 
       {skuRows.length>0&&(
         <div style={card}>
-          <div style={{fontSize:10,fontWeight:700,color:"#52B788",letterSpacing:1,marginBottom:12}}>RENTABILIDAD POR SKU</div>
-          <div style={{display:"grid",gridTemplateColumns:"2fr 65px 120px 110px 110px 75px",gap:8,padding:"0 2px 8px",borderBottom:"1px solid #1A3520",marginBottom:4}}>
+          <div style={{fontSize:10,fontWeight:700,color:colors.purple,letterSpacing:1,marginBottom:12}}>RENTABILIDAD POR SKU</div>
+          <div style={{display:"grid",gridTemplateColumns:"2fr 65px 120px 110px 110px 75px",gap:8,padding:"0 2px 8px",borderBottom:`1px solid ${colors.line}`,marginBottom:4}}>
             {["SKU","Uds.","Revenue Neto","COGS","Gross Profit","Margen"].map(h=>(
-              <div key={h} style={{fontSize:9,fontWeight:700,color:"#3A6A46",letterSpacing:1}}>{h.toUpperCase()}</div>
+              <div key={h} style={{fontSize:9,fontWeight:700,color:colors.muted,letterSpacing:1}}>{h.toUpperCase()}</div>
             ))}
           </div>
           <div style={{maxHeight:320,overflowY:"auto"}}>
             {skuRows.map((s,i)=>(
               <div key={s.name} style={{display:"grid",gridTemplateColumns:"2fr 65px 120px 110px 110px 75px",
-                gap:8,padding:"7px 2px",borderBottom:"1px solid #0D1A0F",
+                gap:8,padding:"7px 2px",borderBottom:`1px solid ${colors.subtle}`,
                 background:i%2?"transparent":"rgba(255,255,255,.01)"}}>
-                <div style={{fontSize:12,fontWeight:600,color:"#E8F5EE"}}>{s.name}</div>
-                <div style={{fontSize:12,color:"#7EC8A4",textAlign:"right"}}>{N(s.units)}</div>
-                <div style={{fontSize:12,color:"#7EC8A4",textAlign:"right"}}>{$(s.rev/1.19)}</div>
-                <div style={{fontSize:12,color:"#5A8A66",textAlign:"right"}}>{$(s.cogs)}</div>
-                <div style={{fontSize:12,fontWeight:700,color:"#F0B429",textAlign:"right"}}>{$(s.profit)}</div>
+                <div style={{fontSize:12,fontWeight:600,color:colors.ink}}>{s.name}</div>
+                <div style={{fontSize:12,color:colors.muted,textAlign:"right"}}>{N(s.units)}</div>
+                <div style={{fontSize:12,color:colors.muted,textAlign:"right"}}>{$(s.rev/1.19)}</div>
+                <div style={{fontSize:12,color:colors.muted,textAlign:"right"}}>{$(s.cogs)}</div>
+                <div style={{fontSize:12,fontWeight:700,color:colors.orange,textAlign:"right"}}>{$(s.profit)}</div>
                 <div style={{fontSize:12,fontWeight:800,textAlign:"right",
-                  color:s.margin>=0.55?"#52B788":s.margin>=0.40?"#F0B429":"#E87040"}}>{P(s.margin)}</div>
+                  color:s.margin>=0.55?colors.purple:s.margin>=0.40?colors.orange:colors.orange}}>{P(s.margin)}</div>
               </div>
             ))}
           </div>

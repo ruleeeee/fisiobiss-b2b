@@ -1,3 +1,5 @@
+"use client";
+import { colors } from "../lib/theme";
 import { useEffect, useMemo, useState } from "react";
 import { $, N } from "../lib/constants";
 import { buildClientIndex } from "../lib/clientIdentity";
@@ -172,11 +174,11 @@ export default function DistribuidoresActivos({ orders = [] }) {
     <div>
       <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 16 }}>Distribuidores activos</div>
 
-      <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 12, padding: "16px 18px", marginBottom: 14 }}>
+      <div style={{ background: colors.paper, border: `1px solid ${colors.line}`, borderRadius: 12, padding: "16px 18px", marginBottom: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "#5A8A66", letterSpacing: 1 }}>VENTANA DE ACTIVIDAD</div>
-          <div style={{ fontSize: 13, color: "#E8F5EE" }}>
-            Desde <strong style={{ color: "#F0B429" }}>{fromLabel(days)}</strong> hasta hoy · {windowLabel(days)}
+          <div style={{ fontSize: 10, fontWeight: 700, color: colors.muted, letterSpacing: 1 }}>VENTANA DE ACTIVIDAD</div>
+          <div style={{ fontSize: 13, color: colors.ink }}>
+            Desde <strong style={{ color: colors.orange }}>{fromLabel(days)}</strong> hasta hoy · {windowLabel(days)}
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -185,9 +187,9 @@ export default function DistribuidoresActivos({ orders = [] }) {
             return (
               <button key={p.days} type="button" onClick={() => { setDays(p.days); setOptsOpen(false); }}
                 style={{
-                  background: on ? "#1A3520" : "transparent",
-                  color: on ? "#52B788" : "#7EC8A4",
-                  border: `1px solid ${on ? "#52B788" : "#1A3520"}`,
+                  background: on ? colors.line : "transparent",
+                  color: on ? colors.purple : colors.muted,
+                  border: `1px solid ${on ? colors.purple : colors.line}`,
                   borderRadius: 8, padding: "8px 14px", cursor: "pointer",
                   fontSize: 13, fontWeight: 700,
                 }}>
@@ -202,9 +204,9 @@ export default function DistribuidoresActivos({ orders = [] }) {
             )}
             <button type="button" onClick={() => setOptsOpen(v => !v)}
               style={{
-                background: (!PRESETS.some(p => p.days === days) || optsOpen) ? "#1A3520" : "transparent",
-                color: "#F0B429",
-                border: "1px solid #473E20",
+                background: (!PRESETS.some(p => p.days === days) || optsOpen) ? colors.line : "transparent",
+                color: colors.orange,
+                border: `1px solid ${colors.line}`,
                 borderRadius: 8, padding: "8px 14px", cursor: "pointer",
                 fontSize: 13, fontWeight: 700,
               }}>
@@ -213,32 +215,32 @@ export default function DistribuidoresActivos({ orders = [] }) {
             {optsOpen && (
               <div style={{
                 position: "absolute", right: 0, top: "calc(100% + 6px)", zIndex: 20,
-                width: 280, background: "#0C1A0F", border: "1px solid #1A3520",
-                borderRadius: 10, padding: 12, boxShadow: "0 12px 32px rgba(0,0,0,.45)",
+                width: 280, background: colors.paper, border: `1px solid ${colors.line}`,
+                borderRadius: 10, padding: 12, boxShadow: "0 12px 32px rgba(20,16,18,.12)",
               }} onMouseDown={e => e.stopPropagation()}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#5A8A66", letterSpacing: 1, marginBottom: 8 }}>MÁS PERÍODOS</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: colors.muted, letterSpacing: 1, marginBottom: 8 }}>MÁS PERÍODOS</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
                   {EXTRA.map(p => (
                     <button key={p.days} type="button" onClick={() => { setDays(p.days); setOptsOpen(false); }}
                       style={{
-                        background: days === p.days ? "#1A3520" : "transparent",
-                        color: days === p.days ? "#52B788" : "#7EC8A4",
-                        border: `1px solid ${days === p.days ? "#52B788" : "#1A3520"}`,
+                        background: days === p.days ? colors.line : "transparent",
+                        color: days === p.days ? colors.purple : colors.muted,
+                        border: `1px solid ${days === p.days ? colors.purple : colors.line}`,
                         borderRadius: 6, padding: "6px 10px", cursor: "pointer", fontSize: 12, fontWeight: 700,
                       }}>
                       {p.label}
                     </button>
                   ))}
                 </div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#5A8A66", letterSpacing: 1, marginBottom: 6 }}>PERSONALIZADO</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: colors.muted, letterSpacing: 1, marginBottom: 6 }}>PERSONALIZADO</div>
                 <input
                   type="range" min={MIN_DAYS} max={MAX_DAYS} step={1} value={days}
                   onChange={e => setDays(Number(e.target.value))}
-                  style={{ width: "100%", accentColor: "#52B788", cursor: "pointer" }}
+                  style={{ width: `100%`, accentColor: colors.purple, cursor: `pointer` }}
                 />
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#5A8A66", marginTop: 4 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: colors.muted, marginTop: 4 }}>
                   <span>{MIN_DAYS} días</span>
-                  <span style={{ color: "#52B788", fontWeight: 700 }}>{windowLabel(days)}</span>
+                  <span style={{ color: colors.purple, fontWeight: 700 }}>{windowLabel(days)}</span>
                   <span>6 meses</span>
                 </div>
               </div>
@@ -253,23 +255,23 @@ export default function DistribuidoresActivos({ orders = [] }) {
           ["Pedidos", N(pedidos.length), "en la ventana"],
           ["Regiones", N(byRegion.length), "con cobertura"],
         ].map(([l, v, s]) => (
-          <div key={l} style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 12, padding: "14px 16px", flex: 1, minWidth: 140 }}>
-            <div style={{ fontSize: 10, color: "#5A8A66", fontWeight: 700, letterSpacing: 1, marginBottom: 5 }}>{l.toUpperCase()}</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: "#52B788" }}>{v}</div>
-            <div style={{ fontSize: 11, color: "#4A7A56", marginTop: 4 }}>{s}</div>
+          <div key={l} style={{ background: colors.paper, border: `1px solid ${colors.line}`, borderRadius: 12, padding: "14px 16px", flex: 1, minWidth: 140 }}>
+            <div style={{ fontSize: 10, color: colors.muted, fontWeight: 700, letterSpacing: 1, marginBottom: 5 }}>{l.toUpperCase()}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: colors.purple }}>{v}</div>
+            <div style={{ fontSize: 11, color: colors.purple, marginTop: 4 }}>{s}</div>
           </div>
         ))}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(380px, 1.15fr) minmax(300px, 0.85fr)", gap: 18, alignItems: "stretch" }}>
-        <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 12, padding: 16 }}>
+        <div style={{ background: colors.paper, border: `1px solid ${colors.line}`, borderRadius: 12, padding: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 8 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#52B788", letterSpacing: 1 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: colors.purple, letterSpacing: 1 }}>
               {drilled ? `COMUNAS · ${drillRegion}` : "CHILE · ELIGE UNA REGIÓN"}
             </div>
             {drilled && (
               <button type="button" onClick={goChile}
-                style={{ background: "transparent", border: "1px solid #2D5A3A", color: "#7EC8A4", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11 }}>
+                style={{ background: "transparent", border: `1px solid ${colors.line}`, color: colors.muted, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11 }}>
                 Volver a Chile
               </button>
             )}
@@ -285,9 +287,9 @@ export default function DistribuidoresActivos({ orders = [] }) {
           />
         </div>
 
-        <div style={{ background: "#0D1F12", border: "1px solid #1A3520", borderRadius: 12, padding: "14px 16px", display: "flex", flexDirection: "column", height: 0, minHeight: "100%", overflow: "hidden" }}>
+        <div style={{ background: colors.paper, border: `1px solid ${colors.line}`, borderRadius: 12, padding: "14px 16px", display: "flex", flexDirection: "column", height: 0, minHeight: "100%", overflow: "hidden" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#5A8A66", letterSpacing: 1 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: colors.muted, letterSpacing: 1 }}>
               PEDIDOS {drilled ? `· ${drillRegion}` : ""}
             </div>
             <div style={{ display: "flex", gap: 6 }}>
@@ -299,9 +301,9 @@ export default function DistribuidoresActivos({ orders = [] }) {
                 return (
                   <button key={id} type="button" onClick={() => { setListMode(id); setOpenGroup(""); }}
                     style={{
-                      background: on ? "#1A3520" : "transparent",
-                      color: on ? "#52B788" : "#7EC8A4",
-                      border: `1px solid ${on ? "#52B788" : "#1A3520"}`,
+                      background: on ? colors.line : "transparent",
+                      color: on ? colors.purple : colors.muted,
+                      border: `1px solid ${on ? colors.purple : colors.line}`,
                       borderRadius: 6, padding: "5px 10px", cursor: "pointer",
                       fontSize: 12, fontWeight: 700,
                     }}>
@@ -313,36 +315,36 @@ export default function DistribuidoresActivos({ orders = [] }) {
           </div>
           {zone && (
             <button type="button" onClick={() => setZone(null)}
-              style={{ background: "transparent", border: "1px solid #2D5A3A", color: "#7EC8A4", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontSize: 11, marginBottom: 10 }}>
+              style={{ background: "transparent", border: `1px solid ${colors.line}`, color: colors.muted, borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontSize: 11, marginBottom: 10 }}>
               Quitar filtro {zone}
             </button>
           )}
-          <div style={{ fontSize: 12, color: "#7EC8A4", marginBottom: 8 }}>{N(visiblePedidos.length)} pedidos</div>
+          <div style={{ fontSize: 12, color: colors.muted, marginBottom: 8 }}>{N(visiblePedidos.length)} pedidos</div>
           <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
             {grouped.length === 0 && (
-              <div style={{ color: "#3A6A46", fontSize: 13 }}>No hay pedidos en esta vista y ventana.</div>
+              <div style={{ color: colors.muted, fontSize: 13 }}>No hay pedidos en esta vista y ventana.</div>
             )}
             {grouped.map(g => {
               const open = openGroup === g.name || grouped.length === 1;
               return (
-                <div key={g.name} style={{ borderBottom: "1px solid #111E14" }}>
+                <div key={g.name} style={{ borderBottom: `1px solid ${colors.subtle}` }}>
                   <button type="button" onClick={() => pickGroup(g.name)}
                     style={{
                       display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center",
                       background: "transparent", border: "none", padding: "14px 0", cursor: "pointer",
-                      color: "#E8F5EE", fontSize: 15, textAlign: "left",
+                      color: colors.ink, fontSize: 15, textAlign: "left",
                     }}>
                     <span style={{ fontWeight: 700 }}>{open ? "▾ " : "▸ "}{g.name}</span>
-                    <span style={{ color: "#52B788", fontWeight: 800 }}>{g.count}</span>
+                    <span style={{ color: colors.purple, fontWeight: 800 }}>{g.count}</span>
                   </button>
                   {open && g.rows.map(p => (
-                    <div key={p.orderId} style={{ padding: "12px 0 12px 8px", borderTop: "1px solid #111E14" }}>
-                      <div style={{ fontWeight: 700, color: "#E8F5EE", fontSize: 15 }}>{p.nombre}</div>
-                      <div style={{ fontSize: 13, color: "#7EC8A4", marginTop: 4 }}>
+                    <div key={p.orderId} style={{ padding: "12px 0 12px 8px", borderTop: `1px solid ${colors.subtle}` }}>
+                      <div style={{ fontWeight: 700, color: colors.ink, fontSize: 15 }}>{p.nombre}</div>
+                      <div style={{ fontSize: 13, color: colors.muted, marginTop: 4 }}>
                         {p.orderId} · {p.fecha} · {p.comuna || "sin comuna"}
                         {p.telefono ? ` · ${p.telefono}` : ""}
                       </div>
-                      <div style={{ fontSize: 12, color: "#52B788", fontWeight: 700, marginTop: 2 }}>{$(p.total)}</div>
+                      <div style={{ fontSize: 12, color: colors.purple, fontWeight: 700, marginTop: 2 }}>{$(p.total)}</div>
                     </div>
                   ))}
                 </div>
