@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useOrders } from "../hooks/useFirestore";
 import { useRegions } from "../hooks/useRegions";
 import { useProducts } from "../hooks/useProducts";
-import { addOrder, updateOrderStatus, deleteOrder } from "../lib/db";
+import { addOrder, deleteOrder } from "../lib/db";
  
 // Componentes
 import AppShell    from "../components/AppShell";
@@ -24,7 +24,7 @@ export default function Home() {
   const {
     orders, nextId, loading, error,
     syncing, lastSync,
-    refresh, updateLocalStatus, addLocalOrder, removeLocalOrder,
+    refresh, addLocalOrder, removeLocalOrder,
   } = useOrders();
 
   // ── Regiones / costos de envío ────────────────
@@ -58,17 +58,6 @@ export default function Home() {
       notify("❌ Error al guardar: " + err.message, "err");
       refresh();
       throw err;
-    }
-  };
- 
-  const handleUpdateStatus = async (id, estado) => {
-    try {
-      updateLocalStatus(id, estado);
-      await updateOrderStatus(id, estado);
-      notify(`Estado actualizado → ${estado}`);
-    } catch (err) {
-      notify("❌ Error al actualizar estado", "err");
-      refresh();
     }
   };
  
@@ -140,12 +129,12 @@ export default function Home() {
             setView={setView}
             regions={regions}
             products={products}
+            orders={orders}
           />
         )}
         {view === "pedidos"      && (
           <Pedidos
             orders={orders}
-            updateStatus={handleUpdateStatus}
             deleteOrder={handleDeleteOrder}
             notify={notify}
           />

@@ -327,7 +327,7 @@ export default function Distribuidores({ orders = [] }) {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid #1A3520" }}>
-                  {["ID", "Fecha", "Región", "Unidades", "Total", "Estado"].map(h => (
+                  {["ID", "Fecha", "Región", "Unidades", "Total"].map(h => (
                     <th key={h} style={{ color: "#5A8A66", fontWeight: 700, padding: "6px 10px", textAlign: "left", fontSize: 10, letterSpacing: 0.8 }}>{h}</th>
                   ))}
                 </tr>
@@ -340,9 +340,6 @@ export default function Distribuidores({ orders = [] }) {
                     <td style={{ padding: "8px 10px", color: "#5A8A66" }}>{o.region?.split("(")[0]?.trim()}</td>
                     <td style={{ padding: "8px 10px", color: "#7EC8A4" }}>{N(o.totalUnidades)}</td>
                     <td style={{ padding: "8px 10px", color: "#52B788", fontWeight: 700 }}>{$(o.totalPagar)}</td>
-                    <td style={{ padding: "8px 10px" }}>
-                      <span style={{ fontSize: 10, color: "#4A7A56", background: "#0A1A0C", padding: "2px 7px", borderRadius: 4 }}>{o.estado}</span>
-                    </td>
                   </tr>
                 ))}
               </tbody>

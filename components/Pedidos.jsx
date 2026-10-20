@@ -1,14 +1,13 @@
 import { useState, useMemo } from "react";
-import { $, N, P, ESTADOS } from "../lib/constants";
+import { $, N, P } from "../lib/constants";
  
 const selStyle={background:"#0D1F12",border:"1px solid #1A3520",color:"#E8F5EE",padding:"8px 12px",borderRadius:8,fontSize:13,cursor:"pointer"};
 const inpStyle={background:"#0A1A0C",border:"1px solid #1A3520",color:"#90CBF9",padding:"9px 12px",borderRadius:8,fontSize:13,width:"100%",boxSizing:"border-box"};
 const card={background:"#0D1F12",border:"1px solid #1A3520",borderRadius:12,padding:"18px 20px",marginBottom:14};
 function Empty({msg}){return <div style={{padding:"32px 20px",textAlign:"center",color:"#3A6A46",fontSize:13}}>📭 {msg}</div>}
  
-export default function Pedidos({ orders, updateStatus, deleteOrder, notify }) {
+export default function Pedidos({ orders, deleteOrder, notify }) {
   const [search, setSearch]   = useState("");
-  const [fEst,   setFEst]     = useState("Todos");
   const [fMes,   setFMes]     = useState("");
   const [fVend,  setFVend]    = useState("Todos");
   const [detail, setDetail]   = useState(null);
@@ -22,11 +21,10 @@ export default function Pedidos({ orders, updateStatus, deleteOrder, notify }) {
   const filtered = useMemo(()=>orders.filter(o=>{
     const s=search.toLowerCase();
     const mS=!s||o.id?.toLowerCase().includes(s)||o.cliente?.toLowerCase().includes(s)||o.region?.toLowerCase().includes(s);
-    const mE=fEst==="Todos"||o.estado===fEst;
     const mM=!fMes||o.fecha?.startsWith(fMes);
     const mV=fVend==="Todos"||o.vendedor===fVend;
-    return mS&&mE&&mM&&mV;
-  }),[orders,search,fEst,fMes,fVend]);
+    return mS&&mM&&mV;
+  }),[orders,search,fMes,fVend]);
  
   // 2. Ordenamiento inteligente (Del más nuevo al más antiguo según el número de ID)
   const sortedOrders = useMemo(() => {
@@ -41,16 +39,6 @@ export default function Pedidos({ orders, updateStatus, deleteOrder, notify }) {
   const pages = Math.ceil(sortedOrders.length/PER_PAGE);
   const paged = sortedOrders.slice((page-1)*PER_PAGE, page*PER_PAGE);
  
-  const updEst = async (id, est) => {
-    try {
-      await updateStatus(id, est);
-      if(detail?.id===id) setDetail(d=>({...d,estado:est}));
-      notify(`Estado → ${est}`);
-    } catch(err) {
-      notify("Error al actualizar","err");
-    }
-  };
-
   const delOrder = async (id, e) => {
     e.stopPropagation();
     if(!confirm(`¿Eliminar pedido ${id}? Esta acción no se puede deshacer.`)) return;
@@ -62,9 +50,7 @@ export default function Pedidos({ orders, updateStatus, deleteOrder, notify }) {
     }
   };
  
-  const estColor={"Pendiente":"#E87040","Shipit Creado":"#4A90D9","Despachado":"#F0B429","Entregado":"#52B788"};
- 
-  if(detail) return <OrderDetail order={detail} onClose={()=>setDetail(null)} onUpdateEst={updEst}/>;
+  if(detail) return <OrderDetail order={detail} onClose={()=>setDetail(null)}/>;
  
   return (
     <div>
@@ -81,19 +67,15 @@ export default function Pedidos({ orders, updateStatus, deleteOrder, notify }) {
           <option value="">Todos los meses</option>
           {allMonths.map(m=><option key={m}>{m}</option>)}
         </select>
-        <select value={fEst} onChange={e=>{setFEst(e.target.value);setPage(1);}} style={selStyle}>
-          <option value="Todos">Todos los estados</option>
-          {ESTADOS.map(e=><option key={e}>{e}</option>)}
-        </select>
         <select value={fVend} onChange={e=>{setFVend(e.target.value);setPage(1);}} style={selStyle}>
           {allVendors.map(v=><option key={v}>{v}</option>)}
         </select>
       </div>
  
       <div style={{background:"#0D1F12",border:"1px solid #1A3520",borderRadius:12,overflow:"hidden"}}>
-        <div style={{display:"grid",gridTemplateColumns:"100px 85px 1fr 110px 85px 110px 120px 44px",gap:10,
+        <div style={{display:"grid",gridTemplateColumns:"100px 85px 1fr 110px 85px 110px 44px",gap:10,
           padding:"9px 16px",borderBottom:"1px solid #1A3520",background:"#0A1A0C"}}>
-          {["ID","Fecha","Cliente / Región","Vendedor","Uds.","Total","Estado",""].map(h=>(
+          {["ID","Fecha","Cliente / Región","Vendedor","Uds.","Total",""].map(h=>(
             <div key={h} style={{fontSize:9,fontWeight:700,color:"#3A6A46",letterSpacing:1}}>{h.toUpperCase()}</div>
           ))}
         </div>
@@ -102,7 +84,7 @@ export default function Pedidos({ orders, updateStatus, deleteOrder, notify }) {
           <div>
             {paged.map((o,i)=>(
               <div key={o.id} onClick={()=>setDetail(o)}
-                style={{display:"grid",gridTemplateColumns:"100px 85px 1fr 110px 85px 110px 120px 44px",
+                style={{display:"grid",gridTemplateColumns:"100px 85px 1fr 110px 85px 110px 44px",
                   gap:10,padding:"11px 16px",cursor:"pointer",transition:"background .1s",
                   borderBottom:"1px solid #0D1A0F",background:i%2?"transparent":"rgba(255,255,255,.01)"}}
                 onMouseEnter={e=>e.currentTarget.style.background="rgba(82,183,136,.05)"}
@@ -116,15 +98,6 @@ export default function Pedidos({ orders, updateStatus, deleteOrder, notify }) {
                 <div style={{fontSize:11,color:"#7EC8A4"}}>{o.vendedor||"—"}</div>
                 <div style={{fontSize:12,fontWeight:600,color:"#7EC8A4"}}>{N(o.totalUnidades)}</div>
                 <div style={{fontSize:12,fontWeight:700,color:"#52B788"}}>{$(o.totalPagar)}</div>
-                <div onClick={e=>e.stopPropagation()}>
-                  <select value={o.estado||"Pendiente"}
-                    onChange={e=>updEst(o.id,e.target.value)}
-                    style={{background:"transparent",border:`1px solid ${estColor[o.estado]||"#E87040"}`,
-                      color:estColor[o.estado]||"#E87040",padding:"4px 6px",borderRadius:6,
-                      fontSize:10,fontWeight:700,cursor:"pointer",width:"100%"}}>
-                    {ESTADOS.map(e=><option key={e} style={{background:"#0D1F12",color:"#E8F5EE"}}>{e}</option>)}
-                  </select>
-                </div>
                 <div onClick={e=>delOrder(o.id,e)} style={{display:"flex",alignItems:"center",justifyContent:"center"}}>
                   <button style={{background:"transparent",border:"1px solid #3A1010",color:"#A03030",
                     borderRadius:6,width:28,height:28,cursor:"pointer",fontSize:14,display:"flex",
@@ -165,7 +138,7 @@ export default function Pedidos({ orders, updateStatus, deleteOrder, notify }) {
   );
 }
  
-function OrderDetail({order,onClose,onUpdateEst}){
+function OrderDetail({order,onClose}){
   // El total de la lista es TOTAL A PAGAR (incluye descuento o total manual).
   // Las líneas se valoran al precio de catálogo; si no cierran con ese total,
   // la diferencia se muestra aparte para que ambos montos coincidan.
@@ -195,7 +168,11 @@ function OrderDetail({order,onClose,onUpdateEst}){
           </div>
           {[["Cliente",order.cliente],["Teléfono",order.telefono],["Email",order.email],
             ["Región",order.region],["Dirección",order.direccion],
-            ["Vendedor",order.vendedor],["Medio de Pago",order.medioPago]].map(([l,v])=>v&&v!=="nan"?(
+            ["Vendedor",order.vendedor],["Medio de Pago",order.medioPago],
+            ["Perfil de distribuidor",order.perfilDistribuidor],
+            ["Origen",order.origenPedido],
+            ["Canal de adquisición",order.canalAdquisicion],
+            ["N° pedido cliente",order.nPedidoCliente]].map(([l,v])=>v&&v!=="nan"?(
             <div key={l} style={{marginBottom:8}}>
               <div style={{fontSize:9,color:"#3A6A46",letterSpacing:1,fontWeight:700}}>{l.toUpperCase()}</div>
               <div style={{fontSize:13,color:"#E8F5EE",marginTop:2}}>{v}</div>
@@ -238,13 +215,6 @@ function OrderDetail({order,onClose,onUpdateEst}){
                 <span style={{color:"#F0B429"}}>{$(gp)} ({P(mg)})</span>
               </div>
             </div>
-          </div>
-          <div style={card}>
-            <div style={{fontSize:10,fontWeight:700,color:"#52B788",letterSpacing:1,marginBottom:10}}>ESTADO DESPACHO</div>
-            <select value={order.estado||"Pendiente"} onChange={e=>onUpdateEst(order.id,e.target.value)}
-              style={{...inpStyle,fontWeight:700,fontSize:14}}>
-              {ESTADOS.map(e=><option key={e}>{e}</option>)}
-            </select>
           </div>
         </div>
       </div>
