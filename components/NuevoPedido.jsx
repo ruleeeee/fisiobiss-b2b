@@ -66,6 +66,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
   const [file, setFile] = useState(null);
   const [quoteMode, setQuoteMode] = useState(false);
   const [nameOpen, setNameOpen] = useState(false);
+  const [envioGratis, setEnvioGratis] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -81,7 +82,11 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
 
   const setQty=(id,field,val)=>setF(x=>({...x,items:x.items.map(it=>it.id===id?{...it,[field]:Math.max(0,+val||0)}:it)}));
 
-  const envio=(REGIONS.find(r=>r.name===f.region)||{}).envio||0;
+  const envioTarifa=(REGIONS.find(r=>r.name===f.region)||{}).envio||0;
+  const envio = envioGratis ? 0 : envioTarifa;
+  const envioResumen = envioGratis
+    ? "Envío Gratis"
+    : (f.region === "RETIRO LOCAL" ? "Retiro local" : $(envio));
   const active=f.items.filter(it=>it.qty>0);
   const subtotal=active.reduce((s,it)=>s+it.qty*it.precio,0);
   const totalUds=active.reduce((s,it)=>s+it.qty,0);
@@ -148,6 +153,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
     id: orderId,
     subtotal,
     costoEnvio: envio,
+    envioGratis,
     totalPagar: total,
     items: active,
   };
@@ -162,6 +168,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
       id:orderId,
       subtotal,
       costoEnvio:envio,
+      envioGratis,
       descuento:descuentoVal,
       totalPagar:total,
       totalUnidades:totalUds,
@@ -177,6 +184,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
       setOnlySelected(false);
       setDescuentoPct("");
       setTotalManual("");
+      setEnvioGratis(false);
       setFile(null);
       setQuoteMode(false);
       setView("pedidos");
@@ -333,11 +341,22 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
       <div style={{display:"grid",gridTemplateColumns:"1fr",gap:14}}>
         <div style={card}>
           <div style={{fontSize:10,fontWeight:700,color:colors.purple,letterSpacing:1,marginBottom:14}}>RESUMEN</div>
-          {[["Subtotal Productos",$(subtotal)],["Costo de Envío",$(envio)],["Total Unidades",N(totalUds)]].map(([l,v])=>(
+          {[["Subtotal Productos",$(subtotal)],["Total Unidades",N(totalUds)]].map(([l,v])=>(
             <div key={l} style={{display:"flex",justifyContent:"space-between",marginBottom:9,fontSize:13}}>
               <span style={{color:colors.muted}}>{l}</span><span style={{fontWeight:600}}>{v}</span>
             </div>
           ))}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:9,fontSize:13,gap:8}}>
+            <span style={{color:colors.muted}}>Costo de Envío</span>
+            <span style={{display:"flex",alignItems:"center",gap:8}}>
+              <button type="button" onClick={()=>setEnvioGratis(v=>!v)}
+                style={{background:envioGratis?colors.purple:"transparent",border:`1px solid ${envioGratis?colors.purple:colors.line}`,
+                  color:envioGratis?"#fff":colors.purple,borderRadius:6,padding:"4px 8px",cursor:"pointer",fontSize:11,fontWeight:700}}>
+                {envioGratis ? "Quitar envío gratis" : "Envío gratis"}
+              </button>
+              <span style={{fontWeight:700,color:envioGratis?colors.purple:colors.ink}}>{envioResumen}</span>
+            </span>
+          </div>
 
           <div style={{marginBottom:9}}>
             <label style={{fontSize:10,color:colors.muted,fontWeight:700,letterSpacing:1,marginBottom:4,display:"block"}}>DESCUENTO (%)</label>
@@ -368,7 +387,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
             </div>
             {pct>0 && (
               <div style={{fontSize:11,color:colors.orange,marginTop:4}}>
-                − {$(descuentoVal)} ({pct}% sobre productos {$(baseParaDescuento)}) + envío {$(envio)}
+                − {$(descuentoVal)} ({pct}% sobre productos {$(baseParaDescuento)}) + {envioResumen}
               </div>
             )}
           </div>

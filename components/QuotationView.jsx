@@ -31,7 +31,7 @@ export default function QuotationView({ order, onClose, embedded = false, closeL
     }
   };
 
-  const { total, lines } = quoteTotals(order);
+  const { total, lines, subtotal, envioLabel } = quoteTotals(order);
 
   const card = (
     <div className="quote-light">
@@ -80,9 +80,20 @@ export default function QuotationView({ order, onClose, embedded = false, closeL
         </div>
       ))}
 
-      <div style={{ borderTop: `1px solid ${colors.line}`, marginTop: 12, paddingTop: 14, display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <div style={{ fontSize: 11, color: colors.muted, letterSpacing: 1, fontWeight: 700 }}>TOTAL A CANCELAR</div>
-        <div style={{ fontSize: 26, fontWeight: 500, color: colors.purple, fontFamily: fonts.mono }}>{$(total)}</div>
+      <div style={{ borderTop: `1px solid ${colors.line}`, marginTop: 12, paddingTop: 14 }}>
+        {[
+          ["Subtotal productos", $(subtotal)],
+          ["Envío", envioLabel],
+        ].map(([label, value]) => (
+          <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+            <div style={{ fontSize: 12, color: colors.muted, fontWeight: 700 }}>{label}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: colors.ink, fontFamily: fonts.mono }}>{value}</div>
+          </div>
+        ))}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 6 }}>
+          <div style={{ fontSize: 11, color: colors.muted, letterSpacing: 1, fontWeight: 700 }}>TOTAL A CANCELAR</div>
+          <div style={{ fontSize: 26, fontWeight: 500, color: colors.purple, fontFamily: fonts.mono }}>{$(total)}</div>
+        </div>
       </div>
 
     </div>
