@@ -1,4 +1,4 @@
-import { colors, tiers } from "../lib/theme.js";
+import { chart, colors, tiers } from "../lib/theme.js";
 // components/Distribuidores.jsx
 import { useState, useMemo } from "react";
 import {
@@ -33,22 +33,22 @@ const PERFIL_KEYS = [...PERFILES_DIST, SIN_DATO];
 const ORIGEN_KEYS = [...ORIGENES_PEDIDO, SIN_DATO];
 const CANAL_KEYS = [...CANALES_ADQUISICION, SIN_DATO];
 const PERFIL_COLORS = {
-  "Distribuidor natural": colors.purple,
-  "Local": colors.purple,
-  "Profesional de la salud": colors.purple,
-  [SIN_DATO]: colors.muted,
+  "Distribuidor natural": chart[0],
+  "Local": chart[1],
+  "Profesional de la salud": chart[2],
+  [SIN_DATO]: chart[4],
 };
 const ORIGEN_COLORS = {
-  "Lead nuevo": colors.purple,
-  "Cliente antiguo": colors.orange,
-  [SIN_DATO]: colors.muted,
+  "Lead nuevo": chart[0],
+  "Cliente antiguo": chart[1],
+  [SIN_DATO]: chart[4],
 };
 const CANAL_COLORS = {
-  "Contacto Directo": colors.purple,
-  "Meta": colors.purple,
-  "TikTok": colors.orange,
-  "Landing page": colors.purple,
-  [SIN_DATO]: colors.muted,
+  "Contacto Directo": chart[0],
+  "Meta": chart[1],
+  "TikTok": chart[2],
+  "Landing page": chart[3],
+  [SIN_DATO]: chart[4],
 };
 
 const monthLabel = (m) => `${m.slice(5)}/${m.slice(2, 4)}`;
@@ -296,7 +296,7 @@ export default function Distribuidores({ orders = [] }) {
     );
   };
 
-  const StackedMonthChart = ({ data, keys, colors, dim }) => (
+  const StackedMonthChart = ({ data, keys, colors: palette, dim }) => (
     <ResponsiveContainer width="100%" height={220}>
       <ComposedChart data={data} onClick={(state) => {
         const row = state?.activePayload?.[0]?.payload;
@@ -308,16 +308,16 @@ export default function Distribuidores({ orders = [] }) {
         <Tooltip content={<ClassifTT />} />
         <Legend iconSize={8} wrapperStyle={{ fontSize: 10, color: colors.muted }} />
         {keys.map(k => (
-          <Bar key={k} dataKey={k} stackId="a" fill={colors[k]} cursor="pointer"
+          <Bar key={k} dataKey={k} stackId="a" fill={palette[k]} cursor="pointer"
             radius={k === keys[keys.length - 1] ? [3, 3, 0, 0] : [0, 0, 0, 0]} name={k}
             onClick={(row) => { if (row?.mes) setMes(row.mes); toggleClassif(dim, k); }} />
         ))}
-        <Line type="monotone" dataKey="total" stroke={colors.ink} strokeWidth={2} dot={{ r: 3 }} name="Total" />
+        <Line type="monotone" dataKey="total" stroke={colors.ink} strokeWidth={2} dot={{ r: 3, fill: colors.ink }} name="Total" />
       </ComposedChart>
     </ResponsiveContainer>
   );
 
-  const MonthMixChart = ({ data, colors, dim }) => {
+  const MonthMixChart = ({ data, colors: palette, dim }) => {
     const tot = data.reduce((s, d) => s + (d.value || 0), 0);
     const withTot = data.map(d => ({ ...d, total: tot }));
     return (
@@ -329,7 +329,7 @@ export default function Distribuidores({ orders = [] }) {
         <Tooltip content={<ClassifTT />} />
         <Bar dataKey="value" radius={[0, 4, 4, 0]} name={classifMetric === "revenue" ? "Revenue" : "Pedidos"} cursor="pointer"
           onClick={(row) => row?.name && toggleClassif(dim, row.name)}>
-          {withTot.map((d, i) => <Cell key={i} fill={colors[d.name] || colors.purple} opacity={!classifFilter || classifFilter.value === d.name ? 1 : 0.35} />)}
+          {withTot.map((d, i) => <Cell key={i} fill={palette[d.name] || colors.purple} opacity={!classifFilter || classifFilter.value === d.name ? 1 : 0.35} />)}
         </Bar>
       </BarChart>
     </ResponsiveContainer>

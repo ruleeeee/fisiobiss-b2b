@@ -65,6 +65,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
   const [totalManual, setTotalManual] = useState("");
   const [file, setFile] = useState(null);
   const [quoteMode, setQuoteMode] = useState(false);
+  const [taxMode, setTaxMode] = useState("bruto");
   const [nameOpen, setNameOpen] = useState(false);
   const [envioGratis, setEnvioGratis] = useState(false);
 
@@ -199,15 +200,38 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
     <div>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,gap:12,flexWrap:"wrap"}}>
         <div style={{fontSize:22,fontWeight:800}}>Nuevo Pedido</div>
-        <div style={{display:"flex",gap:10,alignItems:"center"}}>
-          <button type="button" onClick={()=>setQuoteMode(v=>!v)}
-            style={{background:quoteMode?colors.line:colors.paper,border:`1px solid ${colors.orange}`,
-              color:colors.orange,borderRadius:8,padding:"8px 14px",fontSize:12,fontWeight:800,cursor:"pointer"}}>
-            {quoteMode ? "Volver a editar" : "Mostrar como cotización"}
-          </button>
-          <div style={{background:colors.paper,border:`1px solid ${colors.line}`,borderRadius:8,padding:"8px 18px",fontSize:15,fontWeight:800,color:colors.orange}}>
-            ID: {orderId}
+        <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:8}}>
+          <div style={{display:"flex",gap:10,alignItems:"center"}}>
+            <button type="button" onClick={()=>setQuoteMode(v=>!v)}
+              style={{background:quoteMode?colors.line:colors.paper,border:`1px solid ${colors.orange}`,
+                color:colors.orange,borderRadius:8,padding:"8px 14px",fontSize:12,fontWeight:800,cursor:"pointer"}}>
+              {quoteMode ? "Volver a editar" : "Mostrar como cotización"}
+            </button>
+            <div style={{background:colors.paper,border:`1px solid ${colors.line}`,borderRadius:8,padding:"8px 18px",fontSize:15,fontWeight:800,color:colors.orange}}>
+              ID: {orderId}
+            </div>
           </div>
+          {quoteMode && (
+            <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
+              <div style={{fontSize:11,fontWeight:700,color:colors.muted}}>(Opciones Valores)</div>
+              <div role="group" aria-label="Opciones Valores" style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"flex-end"}}>
+                {[["neto","Solo neto"],["bruto","Bruto"],["ambos","Ambos"]].map(([id,label]) => {
+                  const on = taxMode === id;
+                  return (
+                    <button key={id} type="button" onClick={()=>setTaxMode(id)}
+                      style={{
+                        padding:"8px 12px",borderRadius:8,cursor:"pointer",fontWeight:700,fontSize:12,
+                        border:`1px solid ${on ? colors.purple : colors.line}`,
+                        background:on ? colors.purple : colors.paper,
+                        color:on ? "#FFFFFF" : colors.ink,
+                      }}>
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -216,6 +240,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
         <QuotationView
           order={quoteOrder}
           embedded
+          taxMode={taxMode}
           onClose={()=>setQuoteMode(false)}
           closeLabel="Volver a editar"
         />

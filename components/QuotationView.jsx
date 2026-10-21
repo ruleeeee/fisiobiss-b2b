@@ -2,9 +2,33 @@
 import { useRef, useState } from "react";
 import { colors, fonts } from "../lib/theme";
 import { $ } from "../lib/constants";
-import { quoteTotals } from "../lib/quote";
+import { quotePresentation } from "../lib/quote";
 
-export default function QuotationView({ order, onClose, embedded = false, closeLabel = "Cerrar" }) {
+function MoneyValue({ net, gross, mode, role = "sum" }) {
+  const value = mode === "neto" ? net : gross;
+  if (mode === "ambos") {
+    const size = role === "total" ? 18 : 13;
+    const tone = role === "price" ? colors.muted : role === "line" ? colors.purple : colors.ink;
+    return (
+      <div style={{ textAlign: "right", fontFamily: fonts.mono, lineHeight: 1.3 }}>
+        <div style={{ fontSize: size, fontWeight: 700, color: tone }}>{$(net)} <span style={{ fontSize: 9, fontWeight: 700, color: colors.muted }}>neto</span></div>
+        <div style={{ fontSize: size, fontWeight: 700, color: tone }}>{$(gross)} <span style={{ fontSize: 9, fontWeight: 700, color: colors.muted }}>bruto</span></div>
+      </div>
+    );
+  }
+  if (role === "price") {
+    return <div style={{ textAlign: "right", color: colors.muted, fontFamily: fonts.mono }}>{$(value)}</div>;
+  }
+  if (role === "line") {
+    return <div style={{ textAlign: "right", fontWeight: 700, color: colors.purple, fontFamily: fonts.mono }}>{$(value)}</div>;
+  }
+  if (role === "total") {
+    return <div style={{ textAlign: "right", fontSize: 26, fontWeight: 500, color: colors.purple, fontFamily: fonts.mono }}>{$(value)}</div>;
+  }
+  return <div style={{ textAlign: "right", fontSize: 14, fontWeight: 700, color: colors.ink, fontFamily: fonts.mono }}>{$(value)}</div>;
+}
+
+export default function QuotationView({ order, onClose, embedded = false, closeLabel = "Cerrar", taxMode = "bruto" }) {
   const shotRef = useRef(null);
   const [saving, setSaving] = useState(false);
   if (!order) return null;
@@ -31,7 +55,13 @@ export default function QuotationView({ order, onClose, embedded = false, closeL
     }
   };
 
-  const { total, lines, subtotal, envioLabel } = quoteTotals(order);
+  const quote = quotePresentation(order, taxMode);
+  const { lines, envioLabel, envioIsText } = quote;
+  const priceHeader = taxMode === "neto" ? "Precio neto" : "Precio";
+  const subHeader = taxMode === "neto" ? "Subtotal neto" : "Subtotal";
+  const subtotalLabel = taxMode === "neto" ? "Subtotal productos (neto)" : "Subtotal productos";
+  const totalLabel = taxMode === "neto" ? "TOTAL NETO (sin IVA)" : "TOTAL A CANCELAR";
+  const cols = taxMode === "ambos" ? "1fr 148px 64px 156px" : "1fr 110px 80px 120px";
 
   const card = (
     <div className="quote-light">
@@ -66,34 +96,41 @@ export default function QuotationView({ order, onClose, embedded = false, closeL
         {order.comuna ? <div><span style={{ color: colors.muted }}>Comuna:</span> {order.comuna}</div> : null}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 110px 80px 120px", gap: 8, padding: "0 0 8px", borderBottom: `1px solid ${colors.line}`, marginBottom: 8 }}>
-        {["Producto", "Precio", "Cant.", "Subtotal"].map(h => (
+      <div style={{ display: "grid", gridTemplateColumns: cols, gap: 8, padding: "0 0 8px", borderBottom: `1px solid ${colors.line}`, marginBottom: 8 }}>
+        {["Producto", priceHeader, "Cant.", subHeader].map(h => (
           <div key={h} style={{ fontSize: 9, fontWeight: 700, color: colors.muted, letterSpacing: 1, textAlign: h === "Producto" ? "left" : "right" }}>{h.toUpperCase()}</div>
         ))}
       </div>
       {lines.map(i => (
-        <div key={i.id} style={{ display: "grid", gridTemplateColumns: "1fr 110px 80px 120px", gap: 8, padding: "8px 0", borderBottom: `1px solid ${colors.subtle}`, fontSize: 13 }}>
+        <div key={i.id} style={{ display: "grid", gridTemplateColumns: cols, gap: 8, padding: "8px 0", borderBottom: `1px solid ${colors.subtle}`, fontSize: 13, alignItems: "center" }}>
           <div style={{ color: colors.ink }}>{i.name}</div>
-          <div style={{ textAlign: "right", color: colors.muted, fontFamily: fonts.mono }}>{$(i.displayPrecio)}</div>
+          <MoneyValue net={i.precioNeto} gross={i.precioBruto} mode={taxMode} role="price" />
           <div style={{ textAlign: "right", color: colors.muted, fontFamily: fonts.mono }}>{i.qty}</div>
-          <div style={{ textAlign: "right", fontWeight: 700, color: colors.purple, fontFamily: fonts.mono }}>{$(i.displaySub)}</div>
+          <MoneyValue net={i.subNeto} gross={i.subBruto} mode={taxMode} role="line" />
         </div>
       ))}
 
       <div style={{ borderTop: `1px solid ${colors.line}`, marginTop: 12, paddingTop: 14 }}>
-        {[
-          ["Subtotal productos", $(subtotal)],
-          ["Envío", envioLabel],
-        ].map(([label, value]) => (
-          <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-            <div style={{ fontSize: 12, color: colors.muted, fontWeight: 700 }}>{label}</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: colors.ink, fontFamily: fonts.mono }}>{value}</div>
-          </div>
-        ))}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 6 }}>
-          <div style={{ fontSize: 11, color: colors.muted, letterSpacing: 1, fontWeight: 700 }}>TOTAL A CANCELAR</div>
-          <div style={{ fontSize: 26, fontWeight: 500, color: colors.purple, fontFamily: fonts.mono }}>{$(total)}</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 12 }}>
+          <div style={{ fontSize: 12, color: colors.muted, fontWeight: 700 }}>{subtotalLabel}</div>
+          <MoneyValue net={quote.subtotalNeto} gross={quote.subtotalBruto} mode={taxMode} />
         </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 12 }}>
+          <div style={{ fontSize: 12, color: colors.muted, fontWeight: 700 }}>Envío</div>
+          {envioIsText
+            ? <div style={{ fontSize: 14, fontWeight: 700, color: colors.ink, fontFamily: fonts.mono }}>{envioLabel}</div>
+            : <MoneyValue net={quote.envioNeto} gross={quote.envioBruto} mode={taxMode} />}
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6, gap: 12 }}>
+          <div style={{ fontSize: 11, color: colors.muted, letterSpacing: 1, fontWeight: 700 }}>{totalLabel}</div>
+          <MoneyValue net={quote.totalNeto} gross={quote.totalBruto} mode={taxMode} role="total" />
+        </div>
+        {taxMode === "neto" && (
+          <div style={{ marginTop: 10, fontSize: 11, color: colors.muted }}>Valores netos, sin IVA.</div>
+        )}
+        {taxMode === "ambos" && (
+          <div style={{ marginTop: 10, fontSize: 11, color: colors.muted }}>Neto sin IVA · Bruto con IVA 19%</div>
+        )}
       </div>
 
     </div>

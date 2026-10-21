@@ -1,6 +1,6 @@
 import { colors } from "../lib/theme.js";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { geoMercator } from "d3-geo";
+import { geoMercator, geoPath } from "d3-geo";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 import {
   clipChileContinental, communeGeoUrl, countByName, geoFeatureName,
@@ -115,6 +115,8 @@ export default function ChileIllustratedMap({
   const kind = drilled ? "comuna" : "region";
   const height = drilled ? ZOOM_H : MAP_H;
   const projection = useMemo(() => (geo ? fit(geo, drilled) : geoMercator()), [geo, drilled]);
+  const path = useMemo(() => geoPath(projection), [projection]);
+  const labelScale = drilled ? zoom : 1;
   const picked = (name) => foldGeoName(selectedComuna) === foldGeoName(name);
 
   const communes = useMemo(() => {
@@ -194,33 +196,65 @@ export default function ChileIllustratedMap({
           >
             <g transform={`translate(${pan.x} ${pan.y}) translate(${cx} ${cy}) scale(${drilled ? zoom : 1}) translate(${-cx} ${-cy})`}>
             <Geographies geography={geo}>
-              {({ geographies }) => geographies.map((g, idx) => {
-                const name = geoFeatureName(g.properties, kind);
-                const regionApp = geoFeatureName(g.properties, "region");
-                const n = countByName(counts, name);
-                const on = picked(name) || hover?.name === name;
-                const fill = on ? colors.ink : fillOf(name, idx);
-                const stroke = on ? colors.ink : colors.paper;
-                return (
-                  <Geography
-                    key={g.rsmKey}
-                    geography={g}
-                    tabIndex={-1}
-                    fill={fill}
-                    stroke={stroke}
-                    strokeWidth={0.7}
-                    onMouseDown={e => e.preventDefault()}
-                    onMouseEnter={() => setHover({ name, count: n })}
-                    onMouseLeave={() => setHover(null)}
-                    onClick={() => {
-                      if (moved.current) return;
-                      if (kind === "region") onRegion(regionApp || name);
-                      else onComuna(name);
-                    }}
-                    style={{ fill, stroke, outline: "none", cursor: "pointer" }}
-                  />
-                );
-              })}
+              {({ geographies }) => (
+                <>
+                  {geographies.map((g, idx) => {
+                    const name = geoFeatureName(g.properties, kind);
+                    const regionApp = geoFeatureName(g.properties, "region");
+                    const n = countByName(counts, name);
+                    const on = picked(name) || hover?.name === name;
+                    const fill = on ? colors.ink : fillOf(name, idx);
+                    const stroke = on ? colors.ink : colors.paper;
+                    return (
+                      <Geography
+                        key={g.rsmKey}
+                        geography={g}
+                        tabIndex={-1}
+                        fill={fill}
+                        stroke={stroke}
+                        strokeWidth={0.7}
+                        onMouseDown={e => e.preventDefault()}
+                        onMouseEnter={() => setHover({ name, count: n })}
+                        onMouseLeave={() => setHover(null)}
+                        onClick={() => {
+                          if (moved.current) return;
+                          if (kind === "region") onRegion(regionApp || name);
+                          else onComuna(name);
+                        }}
+                        style={{ fill, stroke, outline: "none", cursor: "pointer" }}
+                      />
+                    );
+                  })}
+                  {geographies.map((g) => {
+                    const name = geoFeatureName(g.properties, kind);
+                    const n = countByName(counts, name);
+                    const [x, y] = path.centroid(g);
+                    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+                    const [[x0, y0], [x1, y1]] = path.bounds(g);
+                    const box = Math.min(Math.abs(x1 - x0), Math.abs(y1 - y0));
+                    const screen = Math.max(8, Math.min(15, box * 0.42));
+                    const fontSize = screen / labelScale;
+                    return (
+                      <text
+                        key={`count-${g.rsmKey}`}
+                        x={x}
+                        y={y}
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        fontSize={fontSize}
+                        fontWeight={700}
+                        fill="#F4EFE6"
+                        stroke="#141012"
+                        strokeWidth={Math.max(0.35, fontSize * 0.14)}
+                        paintOrder="stroke"
+                        style={{ pointerEvents: "none", userSelect: "none" }}
+                      >
+                        {n > 0 ? n : "S.D"}
+                      </text>
+                    );
+                  })}
+                </>
+              )}
             </Geographies>
             </g>
           </ComposableMap>
