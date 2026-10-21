@@ -215,7 +215,7 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
             <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
               <div style={{fontSize:11,fontWeight:700,color:colors.muted}}>(Opciones Valores)</div>
               <div role="group" aria-label="Opciones Valores" style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"flex-end"}}>
-                {[["neto","Solo neto"],["bruto","Bruto"],["ambos","Ambos"]].map(([id,label]) => {
+                {[["neto","Neto"],["bruto","Bruto"],["ambos","Ambos"]].map(([id,label]) => {
                   const on = taxMode === id;
                   return (
                     <button key={id} type="button" onClick={()=>setTaxMode(id)}
