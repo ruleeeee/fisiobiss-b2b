@@ -155,6 +155,8 @@ export default function NuevoPedido({ nextId, addOrder, notify, setView, regions
     subtotal,
     costoEnvio: envio,
     envioGratis,
+    descuento: descuentoVal,
+    descuentoPct: pct,
     totalPagar: total,
     items: active,
   };

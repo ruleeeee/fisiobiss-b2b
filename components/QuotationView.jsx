@@ -4,28 +4,30 @@ import { colors, fonts } from "../lib/theme";
 import { $ } from "../lib/constants";
 import { quotePresentation } from "../lib/quote";
 
-function MoneyValue({ net, gross, mode, role = "sum" }) {
+function MoneyValue({ net, gross, mode, role = "sum", minus = false }) {
   const value = mode === "neto" ? net : gross;
+  const sign = minus ? "− " : "";
   if (mode === "ambos") {
     const size = role === "total" ? 18 : 13;
-    const tone = role === "price" ? colors.muted : role === "line" ? colors.purple : colors.ink;
+    const tone = minus ? colors.orange : role === "price" ? colors.muted : role === "line" ? colors.purple : colors.ink;
     return (
       <div style={{ textAlign: "right", fontFamily: fonts.mono, lineHeight: 1.3 }}>
-        <div style={{ fontSize: size, fontWeight: 700, color: tone }}>{$(net)} <span style={{ fontSize: 9, fontWeight: 700, color: colors.muted }}>neto</span></div>
-        <div style={{ fontSize: size, fontWeight: 700, color: tone }}>{$(gross)} <span style={{ fontSize: 9, fontWeight: 700, color: colors.muted }}>bruto</span></div>
+        <div style={{ fontSize: size, fontWeight: 700, color: tone }}>{sign}{$(net)} <span style={{ fontSize: 9, fontWeight: 700, color: colors.muted }}>neto</span></div>
+        <div style={{ fontSize: size, fontWeight: 700, color: tone }}>{sign}{$(gross)} <span style={{ fontSize: 9, fontWeight: 700, color: colors.muted }}>bruto</span></div>
       </div>
     );
   }
+  const tone = minus ? colors.orange : role === "price" ? colors.muted : role === "line" || role === "total" ? colors.purple : colors.ink;
   if (role === "price") {
-    return <div style={{ textAlign: "right", color: colors.muted, fontFamily: fonts.mono }}>{$(value)}</div>;
+    return <div style={{ textAlign: "right", color: tone, fontFamily: fonts.mono }}>{sign}{$(value)}</div>;
   }
   if (role === "line") {
-    return <div style={{ textAlign: "right", fontWeight: 700, color: colors.purple, fontFamily: fonts.mono }}>{$(value)}</div>;
+    return <div style={{ textAlign: "right", fontWeight: 700, color: tone, fontFamily: fonts.mono }}>{sign}{$(value)}</div>;
   }
   if (role === "total") {
-    return <div style={{ textAlign: "right", fontSize: 26, fontWeight: 500, color: colors.purple, fontFamily: fonts.mono }}>{$(value)}</div>;
+    return <div style={{ textAlign: "right", fontSize: 26, fontWeight: 500, color: tone, fontFamily: fonts.mono }}>{sign}{$(value)}</div>;
   }
-  return <div style={{ textAlign: "right", fontSize: 14, fontWeight: 700, color: colors.ink, fontFamily: fonts.mono }}>{$(value)}</div>;
+  return <div style={{ textAlign: "right", fontSize: 14, fontWeight: 700, color: tone, fontFamily: fonts.mono }}>{sign}{$(value)}</div>;
 }
 
 export default function QuotationView({ order, onClose, embedded = false, closeLabel = "Cerrar", taxMode = "bruto" }) {
@@ -115,6 +117,14 @@ export default function QuotationView({ order, onClose, embedded = false, closeL
           <div style={{ fontSize: 12, color: colors.muted, fontWeight: 700 }}>{subtotalLabel}</div>
           <MoneyValue net={quote.subtotalNeto} gross={quote.subtotalBruto} mode={taxMode} />
         </div>
+        {quote.descuentoBruto > 0 && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 12 }}>
+            <div style={{ fontSize: 12, color: colors.orange, fontWeight: 700 }}>
+              {quote.descuentoPct > 0 ? `Descuento ${quote.descuentoPct}%` : "Descuento"}
+            </div>
+            <MoneyValue net={quote.descuentoNeto} gross={quote.descuentoBruto} mode={taxMode} minus />
+          </div>
+        )}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 12 }}>
           <div style={{ fontSize: 12, color: colors.muted, fontWeight: 700 }}>Envío</div>
           {envioIsText
